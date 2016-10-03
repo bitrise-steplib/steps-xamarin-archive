@@ -1,10 +1,10 @@
-title: Xamarin Builder
-summary: Xamarin Builder
+title: Xamarin Archive
+summary: Xamarin Archive
 description: |-
   Create an archive for your Xamarin application.
-website: https://github.com/bitrise-steplib/steps-xamarin-builder
-source_code_url: https://github.com/bitrise-steplib/steps-xamarin-builder
-support_url: https://github.com/bitrise-steplib/steps-xamarin-builder/issues
+website: https://github.com/bitrise-steplib/steps-xamarin-archive
+source_code_url: https://github.com/bitrise-steplib/steps-xamarin-archive
+support_url: https://github.com/bitrise-steplib/steps-xamarin-archive/issues
 host_os_tags:
   - osx-10.10
 project_type_tags:
@@ -22,9 +22,9 @@ deps:
     bin_name: go
 toolkit:
   go:
-    package_name: github.com/bitrise-steplib/steps-xamarin-builder
+    package_name: github.com/bitrise-steplib/steps-xamarin-archive
 inputs:
-  - xamarin_project: $BITRISE_PROJECT_PATH
+  - xamarin_solution: $BITRISE_PROJECT_PATH
     opts:
       title: Path to the Xamarin Solution file
       description: |-

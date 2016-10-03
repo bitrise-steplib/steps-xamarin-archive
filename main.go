@@ -58,7 +58,7 @@ func exportArtifactFile(pth, deployDir, envKey string) error {
 
 // ConfigsModel ...
 type ConfigsModel struct {
-	XamarinProject       string
+	XamarinSolution      string
 	XamarinConfiguration string
 	XamarinPlatform      string
 	ProjectTypeWhitelist string
@@ -70,7 +70,7 @@ type ConfigsModel struct {
 
 func createConfigsModelFromEnvs() ConfigsModel {
 	return ConfigsModel{
-		XamarinProject:       os.Getenv("xamarin_project"),
+		XamarinSolution:      os.Getenv("xamarin_solution"),
 		XamarinConfiguration: os.Getenv("xamarin_configuration"),
 		XamarinPlatform:      os.Getenv("xamarin_platform"),
 		ProjectTypeWhitelist: os.Getenv("project_type_whitelist"),
@@ -82,7 +82,7 @@ func createConfigsModelFromEnvs() ConfigsModel {
 
 func (configs ConfigsModel) print() {
 	log.Info("Configs:")
-	log.Detail("- XamarinProject: %s", configs.XamarinProject)
+	log.Detail("- XamarinSolution: %s", configs.XamarinSolution)
 	log.Detail("- XamarinConfiguration: %s", configs.XamarinConfiguration)
 	log.Detail("- XamarinPlatform: %s", configs.XamarinPlatform)
 	log.Detail("- ProjectTypeWhitelist: %s", configs.ProjectTypeWhitelist)
@@ -94,13 +94,13 @@ func (configs ConfigsModel) print() {
 
 func (configs ConfigsModel) validate() error {
 	// required
-	if configs.XamarinProject == "" {
-		return errors.New("No XamarinProject parameter specified!")
+	if configs.XamarinSolution == "" {
+		return errors.New("No XamarinSolution parameter specified!")
 	}
-	if exist, err := pathutil.IsPathExists(configs.XamarinProject); err != nil {
-		return fmt.Errorf("Failed to check if XamarinProject exist at: %s, error: %s", configs.XamarinProject, err)
+	if exist, err := pathutil.IsPathExists(configs.XamarinSolution); err != nil {
+		return fmt.Errorf("Failed to check if XamarinSolution exist at: %s, error: %s", configs.XamarinSolution, err)
 	} else if !exist {
-		return fmt.Errorf("XamarinProject not exist at: %s", configs.XamarinProject)
+		return fmt.Errorf("XamarinSolution not exist at: %s", configs.XamarinSolution)
 	}
 
 	if configs.XamarinConfiguration == "" {
@@ -146,9 +146,9 @@ func main() {
 
 	// build
 	fmt.Println()
-	log.Info("Building all projects in solution: %s", configs.XamarinProject)
+	log.Info("Building all projects in solution: %s", configs.XamarinSolution)
 
-	builder, err := builder.New(configs.XamarinProject, projectTypeWhitelist, (configs.ForceMDTool == "yes"))
+	builder, err := builder.New(configs.XamarinSolution, projectTypeWhitelist, (configs.ForceMDTool == "yes"))
 	if err != nil {
 		log.Error("Failed to create xamarin builder, error: %s", err)
 		os.Exit(1)
