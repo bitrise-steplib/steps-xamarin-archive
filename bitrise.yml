@@ -38,6 +38,8 @@ workflows:
         - branch: "master"
         - pull_request_id: ""
         - clone_depth: ""
+    - certificate-and-profile-installer: {}
+    - xamarin-user-management: {}
     - nuget-restore:
     - path::./:
         title: Step test
