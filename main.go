@@ -181,15 +181,24 @@ func main() {
 		fmt.Println()
 	}
 
-	if err := builder.BuildAllProjects(configs.XamarinConfiguration, configs.XamarinPlatform, callback); err != nil {
+	warnings, err := builder.BuildAllProjects(configs.XamarinConfiguration, configs.XamarinPlatform, callback)
+	if len(warnings) > 0 {
+		log.Warn("Build warnings:")
+		for _, warning := range warnings {
+			log.Warn(warning)
+		}
+	}
+	if err != nil {
 		log.Error("Build failed, error: %s", err)
 		os.Exit(1)
 	}
 
-	output, err := builder.CollectOutput(configs.XamarinConfiguration, configs.XamarinPlatform)
-	if err != nil {
-		log.Error("Failed to collect generated outputs, error: %s", err)
-		os.Exit(1)
+	output, warnings := builder.CollectOutput(configs.XamarinConfiguration, configs.XamarinPlatform)
+	if len(warnings) > 0 {
+		log.Warn("Build warnings:")
+		for _, warning := range warnings {
+			log.Warn(warning)
+		}
 	}
 	// ---
 

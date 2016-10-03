@@ -1,6 +1,7 @@
 package builder
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -148,21 +149,21 @@ func (builder Model) CleanAll(callback ClearCommandCallback) error {
 }
 
 // BuildAllProjects ...
-func (builder Model) BuildAllProjects(configuration, platform string, callback BuildCommandCallback) error {
+func (builder Model) BuildAllProjects(configuration, platform string, callback BuildCommandCallback) ([]string, error) {
+	warnings := []string{}
 	buildableProjects := builder.buildableProjects(configuration, platform)
-
 	solutionConfig := utility.ToConfig(configuration, platform)
 
 	for _, proj := range buildableProjects {
 		projectConfigKey, ok := proj.ConfigMap[solutionConfig]
 		if !ok {
-			// fmt.Sprintf("project (%s) do not have config for solution config (%s), skipping...", proj.Name, solutionConfig)
+			warnings = append(warnings, fmt.Sprintf("project (%s) do not have config for solution config (%s), skipping...", proj.Name, solutionConfig))
 			continue
 		}
 
 		projectConfig, ok := proj.Configs[projectConfigKey]
 		if !ok {
-			// fmt.Sprintf("project (%s) contains mapping for solution config (%s), but does not have project configuration", proj.Name, solutionConfig)
+			warnings = append(warnings, fmt.Sprintf("project (%s) contains mapping for solution config (%s), but does not have project configuration", proj.Name, solutionConfig))
 			continue
 		}
 
@@ -246,17 +247,18 @@ func (builder Model) BuildAllProjects(configuration, platform string, callback B
 			}
 
 			if err := buildCommand.Run(); err != nil {
-				return err
+				return warnings, err
 			}
 		}
 	}
 
-	return nil
+	return warnings, nil
 }
 
 // CollectOutput ...
-func (builder Model) CollectOutput(configuration, platform string) (OutputMap, error) {
+func (builder Model) CollectOutput(configuration, platform string) (OutputMap, []string) {
 	outputMap := OutputMap{}
+	warnings := []string{}
 
 	buildableProjects := builder.buildableProjects(configuration, platform)
 
@@ -283,39 +285,39 @@ func (builder Model) CollectOutput(configuration, platform string) (OutputMap, e
 		switch proj.ProjectType {
 		case constants.ProjectTypeIos, constants.ProjectTypeTVOs:
 			if xcarchivePth, err := exportLatestXCArchiveFromXcodeArchives(proj.AssemblyName); err != nil {
-				return OutputMap{}, err
+				warnings = append(warnings, err.Error())
 			} else if xcarchivePth != "" {
 				projectTypeOutputMap[constants.OutputTypeXCArchive] = xcarchivePth
 			}
 			if ipaPth, err := exportIpa(projectConfig.OutputDir, proj.AssemblyName); err != nil {
-				return OutputMap{}, err
+				warnings = append(warnings, err.Error())
 			} else if ipaPth != "" {
 				projectTypeOutputMap[constants.OutputTypeIPA] = ipaPth
 			}
 			if dsymPth, err := exportDSYM(projectConfig.OutputDir, proj.AssemblyName); err != nil {
-				return OutputMap{}, err
+				warnings = append(warnings, err.Error())
 			} else if dsymPth != "" {
 				projectTypeOutputMap[constants.OutputTypeDSYM] = dsymPth
 			}
 		case constants.ProjectTypeMac:
 			if xcarchivePth, err := exportLatestXCArchiveFromXcodeArchives(proj.AssemblyName); err != nil {
-				return OutputMap{}, err
+				warnings = append(warnings, err.Error())
 			} else if xcarchivePth != "" {
 				projectTypeOutputMap[constants.OutputTypeXCArchive] = xcarchivePth
 			}
 			if appPth, err := exportApp(projectConfig.OutputDir, proj.AssemblyName); err != nil {
-				return OutputMap{}, err
+				warnings = append(warnings, err.Error())
 			} else if appPth != "" {
 				projectTypeOutputMap[constants.OutputTypeAPP] = appPth
 			}
 			if pkgPth, err := exportPkg(projectConfig.OutputDir, proj.AssemblyName); err != nil {
-				return OutputMap{}, err
+				warnings = append(warnings, err.Error())
 			} else if pkgPth != "" {
 				projectTypeOutputMap[constants.OutputTypePKG] = pkgPth
 			}
 		case constants.ProjectTypeAndroid:
 			if apkPth, err := exportApk(projectConfig.OutputDir, proj.ManifestPth, projectConfig.SignAndroid); err != nil {
-				return OutputMap{}, err
+				warnings = append(warnings, err.Error())
 			} else if apkPth != "" {
 				projectTypeOutputMap[constants.OutputTypeAPK] = apkPth
 			}
@@ -326,5 +328,5 @@ func (builder Model) CollectOutput(configuration, platform string) (OutputMap, e
 		}
 	}
 
-	return outputMap, nil
+	return outputMap, warnings
 }

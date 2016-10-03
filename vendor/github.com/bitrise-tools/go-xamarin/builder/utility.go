@@ -86,6 +86,10 @@ func isArchitectureArchiveable(architectures []string) bool {
 	return true
 }
 
+func isPlatformAnyCPU(platform string) bool {
+	return (platform == "Any CPU" || platform == "AnyCPU")
+}
+
 func androidPackageName(manifestPth string) (string, error) {
 	packageName := ""
 
@@ -116,9 +120,13 @@ func exportApk(outputDir, manifestPth string, isSigned bool) (string, error) {
 		return "", err
 	}
 
-	apks, err := filepath.Glob(filepath.Join(outputDir, "*.apk"))
+	pattern := filepath.Join(outputDir, "*.apk")
+	apks, err := filepath.Glob(pattern)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("Failed to find apk with pattern (%s), error: %s", pattern, err)
+	}
+	if len(apks) == 0 {
+		return "", fmt.Errorf("No apk found with patterns (%s), error: %s", pattern, err)
 	}
 
 	if isSigned {
@@ -142,13 +150,7 @@ func exportApk(outputDir, manifestPth string, isSigned bool) (string, error) {
 	}
 
 	if apkPth == "" {
-		pattern := fmt.Sprintf(`(?i).*\.apk`)
-
-		for _, apk := range apks {
-			if match := regexp.MustCompile(pattern).FindString(apk); match != "" {
-				apkPth = apk
-			}
-		}
+		apkPth = apks[0]
 	}
 
 	return apkPth, nil
@@ -170,10 +172,12 @@ func exportLatestXCArchiveFromXcodeArchives(projectName string) (string, error) 
 	latestArchiveDate := time.Time{}
 
 	pattern := filepath.Join(xcodeArchivesDir, "*", projectName+" *.xcarchive")
-
 	archives, err := filepath.Glob(pattern)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("Failed to find archives with pattern (%s), error: %s", pattern, err)
+	}
+	if len(archives) == 0 {
+		return "", fmt.Errorf("No archive found with patterns (%s), error: %s", pattern, err)
 	}
 
 	for _, archive := range archives {
@@ -215,17 +219,17 @@ func exportIpa(outputDir, assemblyName string) (string, error) {
 	pattern := filepath.Join(outputDir, assemblyName+"*", assemblyName+".ipa")
 	ipas, err := filepath.Glob(pattern)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("Failed to find ipa with pattern (%s), error: %s", pattern, err)
 	}
 	if len(ipas) == 0 {
-		pattern := filepath.Join(outputDir, "*", "*.ipa")
-		ipas, err = filepath.Glob(pattern)
+		wildCardPattern := filepath.Join(outputDir, "*", "*.ipa")
+		ipas, err = filepath.Glob(wildCardPattern)
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("Failed to find ipa with pattern (%s), error: %s", wildCardPattern, err)
 		}
 
 		if len(ipas) == 0 {
-			return "", nil
+			return "", fmt.Errorf("No ipa found with patterns (%s, %s), error: %s", pattern, wildCardPattern, err)
 		}
 	}
 
@@ -259,18 +263,10 @@ func exportDSYM(outputDir, assemblyName string) (string, error) {
 	pattern := filepath.Join(outputDir, assemblyName+"*.dSYM")
 	dSYMs, err := filepath.Glob(pattern)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("Failed to find dsym with pattern (%s), error: %s", pattern, err)
 	}
 	if len(dSYMs) == 0 {
-		pattern := filepath.Join(outputDir, "*.dSYM")
-		dSYMs, err = filepath.Glob(pattern)
-		if err != nil {
-			return "", err
-		}
-
-		if len(dSYMs) == 0 {
-			return "", nil
-		}
+		return "", fmt.Errorf("No dsym found with pattern (%s), error: %s", pattern, err)
 	}
 	return dSYMs[0], nil
 }
@@ -279,10 +275,10 @@ func exportPkg(outputDir, assemblyName string) (string, error) {
 	pattern := filepath.Join(outputDir, assemblyName+"*.pkg")
 	pkgs, err := filepath.Glob(pattern)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("Failed to find pkg with pattern (%s), error: %s", pattern, err)
 	}
 	if len(pkgs) == 0 {
-		return "", nil
+		return "", fmt.Errorf("No pkg found with pattern (%s), error: %s", pattern, err)
 	}
 	return pkgs[0], nil
 }
@@ -291,14 +287,10 @@ func exportApp(outputDir, assemblyName string) (string, error) {
 	pattern := filepath.Join(outputDir, assemblyName+"*.app")
 	apps, err := filepath.Glob(pattern)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("Failed to find app with pattern (%s), error: %s", pattern, err)
 	}
 	if len(apps) == 0 {
-		return "", nil
+		return "", fmt.Errorf("No app found with pattern (%s), error: %s", pattern, err)
 	}
 	return apps[0], nil
-}
-
-func isPlatformAnyCPU(platform string) bool {
-	return (platform == "Any CPU" || platform == "AnyCPU")
 }
