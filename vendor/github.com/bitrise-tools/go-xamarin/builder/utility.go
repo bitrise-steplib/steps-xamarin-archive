@@ -126,7 +126,7 @@ func exportApk(outputDir, manifestPth string, isSigned bool) (string, error) {
 		return "", fmt.Errorf("Failed to find apk with pattern (%s), error: %s", pattern, err)
 	}
 	if len(apks) == 0 {
-		return "", fmt.Errorf("No apk found with patterns (%s), error: %s", pattern, err)
+		return "", fmt.Errorf("No apk found with patterns (%s)", pattern)
 	}
 
 	if isSigned {
@@ -177,7 +177,7 @@ func exportLatestXCArchiveFromXcodeArchives(projectName string) (string, error) 
 		return "", fmt.Errorf("Failed to find archives with pattern (%s), error: %s", pattern, err)
 	}
 	if len(archives) == 0 {
-		return "", fmt.Errorf("No archive found with patterns (%s), error: %s", pattern, err)
+		return "", fmt.Errorf("No archive found with patterns (%s)", pattern)
 	}
 
 	for _, archive := range archives {
@@ -229,7 +229,7 @@ func exportIpa(outputDir, assemblyName string) (string, error) {
 		}
 
 		if len(ipas) == 0 {
-			return "", fmt.Errorf("No ipa found with patterns (%s, %s), error: %s", pattern, wildCardPattern, err)
+			return "", fmt.Errorf("No ipa found with patterns (%s, %s)", pattern, wildCardPattern)
 		}
 	}
 
@@ -266,7 +266,7 @@ func exportDSYM(outputDir, assemblyName string) (string, error) {
 		return "", fmt.Errorf("Failed to find dsym with pattern (%s), error: %s", pattern, err)
 	}
 	if len(dSYMs) == 0 {
-		return "", fmt.Errorf("No dsym found with pattern (%s), error: %s", pattern, err)
+		return "", fmt.Errorf("No dsym found with pattern (%s)", pattern)
 	}
 	return dSYMs[0], nil
 }
@@ -278,7 +278,7 @@ func exportPkg(outputDir, assemblyName string) (string, error) {
 		return "", fmt.Errorf("Failed to find pkg with pattern (%s), error: %s", pattern, err)
 	}
 	if len(pkgs) == 0 {
-		return "", fmt.Errorf("No pkg found with pattern (%s), error: %s", pattern, err)
+		return "", fmt.Errorf("No pkg found with pattern (%s)", pattern)
 	}
 	return pkgs[0], nil
 }
@@ -290,7 +290,7 @@ func exportApp(outputDir, assemblyName string) (string, error) {
 		return "", fmt.Errorf("Failed to find app with pattern (%s), error: %s", pattern, err)
 	}
 	if len(apps) == 0 {
-		return "", fmt.Errorf("No app found with pattern (%s), error: %s", pattern, err)
+		return "", fmt.Errorf("No app found with pattern (%s)", pattern)
 	}
 	return apps[0], nil
 }

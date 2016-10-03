@@ -32,43 +32,43 @@
 		},
 		{
 			"ImportPath": "github.com/bitrise-tools/go-xamarin/builder",
-			"Comment": "0.9.0-7-g868e774",
-			"Rev": "868e7741082f2db0df9a51f22417257743e5f199"
+			"Comment": "0.9.0-8-g8974f9d",
+			"Rev": "8974f9db4c43a3d9d831416e549a66b85daa65ea"
 		},
 		{
 			"ImportPath": "github.com/bitrise-tools/go-xamarin/buildtool",
-			"Comment": "0.9.0-7-g868e774",
-			"Rev": "868e7741082f2db0df9a51f22417257743e5f199"
+			"Comment": "0.9.0-8-g8974f9d",
+			"Rev": "8974f9db4c43a3d9d831416e549a66b85daa65ea"
 		},
 		{
 			"ImportPath": "github.com/bitrise-tools/go-xamarin/buildtool/mdtool",
-			"Comment": "0.9.0-7-g868e774",
-			"Rev": "868e7741082f2db0df9a51f22417257743e5f199"
+			"Comment": "0.9.0-8-g8974f9d",
+			"Rev": "8974f9db4c43a3d9d831416e549a66b85daa65ea"
 		},
 		{
 			"ImportPath": "github.com/bitrise-tools/go-xamarin/buildtool/xbuild",
-			"Comment": "0.9.0-7-g868e774",
-			"Rev": "868e7741082f2db0df9a51f22417257743e5f199"
+			"Comment": "0.9.0-8-g8974f9d",
+			"Rev": "8974f9db4c43a3d9d831416e549a66b85daa65ea"
 		},
 		{
 			"ImportPath": "github.com/bitrise-tools/go-xamarin/constants",
-			"Comment": "0.9.0-7-g868e774",
-			"Rev": "868e7741082f2db0df9a51f22417257743e5f199"
+			"Comment": "0.9.0-8-g8974f9d",
+			"Rev": "8974f9db4c43a3d9d831416e549a66b85daa65ea"
 		},
 		{
 			"ImportPath": "github.com/bitrise-tools/go-xamarin/project",
-			"Comment": "0.9.0-7-g868e774",
-			"Rev": "868e7741082f2db0df9a51f22417257743e5f199"
+			"Comment": "0.9.0-8-g8974f9d",
+			"Rev": "8974f9db4c43a3d9d831416e549a66b85daa65ea"
 		},
 		{
 			"ImportPath": "github.com/bitrise-tools/go-xamarin/solution",
-			"Comment": "0.9.0-7-g868e774",
-			"Rev": "868e7741082f2db0df9a51f22417257743e5f199"
+			"Comment": "0.9.0-8-g8974f9d",
+			"Rev": "8974f9db4c43a3d9d831416e549a66b85daa65ea"
 		},
 		{
 			"ImportPath": "github.com/bitrise-tools/go-xamarin/utility",
-			"Comment": "0.9.0-7-g868e774",
-			"Rev": "868e7741082f2db0df9a51f22417257743e5f199"
+			"Comment": "0.9.0-8-g8974f9d",
+			"Rev": "8974f9db4c43a3d9d831416e549a66b85daa65ea"
 		}
 	]
 }
