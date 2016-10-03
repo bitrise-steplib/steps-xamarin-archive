@@ -262,7 +262,15 @@ func exportDSYM(outputDir, assemblyName string) (string, error) {
 		return "", err
 	}
 	if len(dSYMs) == 0 {
-		return "", nil
+		pattern := filepath.Join(outputDir, "*.dSYM")
+		dSYMs, err = filepath.Glob(pattern)
+		if err != nil {
+			return "", err
+		}
+
+		if len(dSYMs) == 0 {
+			return "", nil
+		}
 	}
 	return dSYMs[0], nil
 }

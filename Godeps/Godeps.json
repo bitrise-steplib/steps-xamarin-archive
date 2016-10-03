@@ -32,43 +32,43 @@
 		},
 		{
 			"ImportPath": "github.com/bitrise-tools/go-xamarin/builder",
-			"Comment": "0.9.0-5-g63d9004",
-			"Rev": "63d9004d839a2da52e73b46583caa80c06d697f3"
+			"Comment": "0.9.0-6-g457452d",
+			"Rev": "457452d629f12acb0a91ea2e59c1ed5bc4d28f68"
 		},
 		{
 			"ImportPath": "github.com/bitrise-tools/go-xamarin/buildtool",
-			"Comment": "0.9.0-5-g63d9004",
-			"Rev": "63d9004d839a2da52e73b46583caa80c06d697f3"
+			"Comment": "0.9.0-6-g457452d",
+			"Rev": "457452d629f12acb0a91ea2e59c1ed5bc4d28f68"
 		},
 		{
 			"ImportPath": "github.com/bitrise-tools/go-xamarin/buildtool/mdtool",
-			"Comment": "0.9.0-5-g63d9004",
-			"Rev": "63d9004d839a2da52e73b46583caa80c06d697f3"
+			"Comment": "0.9.0-6-g457452d",
+			"Rev": "457452d629f12acb0a91ea2e59c1ed5bc4d28f68"
 		},
 		{
 			"ImportPath": "github.com/bitrise-tools/go-xamarin/buildtool/xbuild",
-			"Comment": "0.9.0-5-g63d9004",
-			"Rev": "63d9004d839a2da52e73b46583caa80c06d697f3"
+			"Comment": "0.9.0-6-g457452d",
+			"Rev": "457452d629f12acb0a91ea2e59c1ed5bc4d28f68"
 		},
 		{
 			"ImportPath": "github.com/bitrise-tools/go-xamarin/constants",
-			"Comment": "0.9.0-5-g63d9004",
-			"Rev": "63d9004d839a2da52e73b46583caa80c06d697f3"
+			"Comment": "0.9.0-6-g457452d",
+			"Rev": "457452d629f12acb0a91ea2e59c1ed5bc4d28f68"
 		},
 		{
 			"ImportPath": "github.com/bitrise-tools/go-xamarin/project",
-			"Comment": "0.9.0-5-g63d9004",
-			"Rev": "63d9004d839a2da52e73b46583caa80c06d697f3"
+			"Comment": "0.9.0-6-g457452d",
+			"Rev": "457452d629f12acb0a91ea2e59c1ed5bc4d28f68"
 		},
 		{
 			"ImportPath": "github.com/bitrise-tools/go-xamarin/solution",
-			"Comment": "0.9.0-5-g63d9004",
-			"Rev": "63d9004d839a2da52e73b46583caa80c06d697f3"
+			"Comment": "0.9.0-6-g457452d",
+			"Rev": "457452d629f12acb0a91ea2e59c1ed5bc4d28f68"
 		},
 		{
 			"ImportPath": "github.com/bitrise-tools/go-xamarin/utility",
-			"Comment": "0.9.0-5-g63d9004",
-			"Rev": "63d9004d839a2da52e73b46583caa80c06d697f3"
+			"Comment": "0.9.0-6-g457452d",
+			"Rev": "457452d629f12acb0a91ea2e59c1ed5bc4d28f68"
 		}
 	]
 }
