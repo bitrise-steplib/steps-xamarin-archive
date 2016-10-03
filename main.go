@@ -22,6 +22,26 @@ func exportEnvironmentWithEnvman(keyStr, valueStr string) error {
 	return cmd.Run()
 }
 
+func exportZipedArtifactDir(pth, deployDir, envKey string) error {
+	parentDir := filepath.Dir(pth)
+	dirName := filepath.Base(pth)
+	deployPth := filepath.Join(deployDir, dirName+".zip")
+	cmd := cmdex.NewCommand("/usr/bin/zip", "-rTy", deployPth, dirName)
+	cmd.SetDir(parentDir)
+	out, err := cmd.RunAndReturnTrimmedCombinedOutput()
+	if err != nil {
+		return fmt.Errorf("Failed to zip dir: %s, output: %s, error: %s", pth, out, err)
+	}
+
+	if err := exportEnvironmentWithEnvman(envKey, deployPth); err != nil {
+		return fmt.Errorf("Failed to export artifact path (%s) into (%s)", deployPth, envKey)
+	}
+
+	log.Done("artifact path (%s) is available in (%s) environment variable", deployPth, envKey)
+
+	return nil
+}
+
 func exportArtifactDir(pth, deployDir, envKey string) error {
 	base := filepath.Base(pth)
 	deployPth := filepath.Join(deployDir, base)
@@ -202,7 +222,7 @@ func main() {
 			dsymPth, ok := outputMap[constants.OutputTypeDSYM]
 			if ok {
 				log.Detail("exporintg iOS dSYM: %s", dsymPth)
-				if err := exportArtifactFile(dsymPth, configs.DeployDir, "BITRISE_IOS_DSYM_PATH"); err != nil {
+				if err := exportZipedArtifactDir(dsymPth, configs.DeployDir, "BITRISE_IOS_DSYM_PATH"); err != nil {
 					log.Error("Failed to export dsym, error: %s", err)
 					os.Exit(1)
 				}
@@ -261,7 +281,7 @@ func main() {
 			dsymPth, ok := outputMap[constants.OutputTypeDSYM]
 			if ok {
 				log.Detail("exporintg tvOS dSYM: %s", dsymPth)
-				if err := exportArtifactFile(dsymPth, configs.DeployDir, "BITRISE_TVOS_DSYM_PATH"); err != nil {
+				if err := exportZipedArtifactDir(dsymPth, configs.DeployDir, "BITRISE_TVOS_DSYM_PATH"); err != nil {
 					log.Error("Failed to export dsym, error: %s", err)
 					os.Exit(1)
 				}
