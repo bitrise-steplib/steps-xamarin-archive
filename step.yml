@@ -1,0 +1,108 @@
+title: Xamarin Builder
+summary: Xamarin Builder
+description: |-
+  Create an archive for your Xamarin application.
+website: https://github.com/bitrise-steplib/steps-xamarin-builder
+source_code_url: https://github.com/bitrise-steplib/steps-xamarin-builder
+support_url: https://github.com/bitrise-steplib/steps-xamarin-builder/issues
+host_os_tags:
+  - osx-10.10
+project_type_tags:
+  - build
+  - xamarin
+type_tags: []
+is_requires_admin_user: false
+is_always_run: false
+is_skippable: false
+deps:
+  brew:
+  - name: go
+  apt_get:
+  - name: golang
+    bin_name: go
+toolkit:
+  go:
+    package_name: github.com/bitrise-steplib/steps-xamarin-builder
+inputs:
+  - xamarin_project: $BITRISE_PROJECT_PATH
+    opts:
+      title: Path to the Xamarin Solution file
+      description: |-
+        The Xamarin Solution file `.sln` path.
+      is_required: true
+  - xamarin_configuration: $BITRISE_XAMARIN_CONFIGURATION
+    opts:
+      title: Xamarin solution configuration
+      description: |-
+        Xamarin solution configuration.
+      is_required: true
+  - xamarin_platform: $BITRISE_XAMARIN_PLATFORM
+    opts:
+      title: Xamarin solution platform
+      description: |-
+        Xamarin solution platform.
+      is_required: true
+  - project_type_whitelist:
+    opts:
+      title: Specify project tyes to build
+      description: |-
+        Comma separated list of project types to build.
+
+        __Empty list means: build all project type.__
+
+        Available platforms:
+
+        - iOS
+        - Android
+        - macOS
+        - tvOS
+
+        Format examples:
+
+        - macOS
+        - iOS,Android
+  - force_mdtool: "no"
+    opts:
+      title: (Experimental) Force use mdtool for builds?
+      description: |-
+        Force use mdtool for building iOS, tvOS and macOS projects?
+
+        By default step will build __iOS__, __tvOS__ and __macOS__ projects with `xbuild` build tool. 
+        If you want to switch to use `mdtool`, set this input to `yes`.
+
+        _Android projects will build with `xbuild`._
+      value_options:
+      - "yes"
+      - "no"
+      is_required: true
+outputs:
+  - BITRISE_IOS_XCARCHIVE_PATH: ""
+    opts:
+      title: The created iOS .xcarchive file's path
+  - BITRISE_IOS_IPA_PATH:
+    opts:
+      title: The created iOS .ipa file's path
+  - BITRISE_IOS_DSYM_PATH:
+    opts:
+      title: The created iOS .dSYM file's path
+  - BITRISE_APK_PATH: ""
+    opts:
+      title: The created android .apk file's path
+  - BITRISE_TVOS_XCARCHIVE_PATH: ""
+    opts:
+      title: The created tvOS .xcarchive file's path
+  - BITRISE_TVOS_IPA_PATH:
+    opts:
+      title: The created tvOS .ipa file's path
+  - BITRISE_TVOS_DSYM_PATH:
+    opts:
+      title: The created tvOS .dSYM file's path
+  - BITRISE_MACOS_XCARCHIVE_PATH: ""
+    opts:
+      title: The created macOS .xcarchive file's path
+  - BITRISE_MACOS_APP_PATH:
+    opts:
+      title: The created macOS .app file's path
+  - BITRISE_MACOS_PKG_PATH:
+    opts:
+      title: The created macOS .pkg file's path
