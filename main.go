@@ -14,6 +14,7 @@ import (
 	"github.com/bitrise-tools/go-xamarin/buildtool"
 	"github.com/bitrise-tools/go-xamarin/constants"
 	"github.com/bitrise-tools/go-xamarin/project"
+	shellquote "github.com/kballard/go-shellquote"
 )
 
 // ConfigsModel ...
@@ -22,9 +23,13 @@ type ConfigsModel struct {
 	XamarinConfiguration string
 	XamarinPlatform      string
 	ProjectTypeWhitelist string
+
+	AndroidCustomOptions string
+	IOSCustomOptions     string
+	TvOSCustomOptions    string
+	MacOSCustomOptions   string
 	ForceMDTool          string
 
-	// Other configs
 	DeployDir string
 }
 
@@ -34,6 +39,11 @@ func createConfigsModelFromEnvs() ConfigsModel {
 		XamarinConfiguration: os.Getenv("xamarin_configuration"),
 		XamarinPlatform:      os.Getenv("xamarin_platform"),
 		ProjectTypeWhitelist: os.Getenv("project_type_whitelist"),
+
+		AndroidCustomOptions: os.Getenv("android_build_command_custom_options"),
+		IOSCustomOptions:     os.Getenv("ios_build_command_custom_options"),
+		TvOSCustomOptions:    os.Getenv("tvos_build_command_custom_options"),
+		MacOSCustomOptions:   os.Getenv("macos_build_command_custom_options"),
 		ForceMDTool:          os.Getenv("force_mdtool"),
 
 		DeployDir: os.Getenv("BITRISE_DEPLOY_DIR"),
@@ -42,12 +52,21 @@ func createConfigsModelFromEnvs() ConfigsModel {
 
 func (configs ConfigsModel) print() {
 	log.Info("Configs:")
+
 	log.Detail("- XamarinSolution: %s", configs.XamarinSolution)
 	log.Detail("- XamarinConfiguration: %s", configs.XamarinConfiguration)
 	log.Detail("- XamarinPlatform: %s", configs.XamarinPlatform)
 	log.Detail("- ProjectTypeWhitelist: %s", configs.ProjectTypeWhitelist)
+
+	log.Info("Experimental Configs:")
+
+	log.Detail("- AndroidCustomOptions: %s", configs.AndroidCustomOptions)
+	log.Detail("- IOSCustomOptions: %s", configs.IOSCustomOptions)
+	log.Detail("- TvOSCustomOptions: %s", configs.TvOSCustomOptions)
+	log.Detail("- MacOSCustomOptions: %s", configs.MacOSCustomOptions)
 	log.Detail("- ForceMDTool: %s", configs.ForceMDTool)
-	fmt.Println()
+
+	log.Info("Other Configs:")
 
 	log.Detail("- DeployDir: %s", configs.DeployDir)
 }
@@ -164,6 +183,28 @@ func main() {
 	}
 	// ---
 
+	// prepare custom options
+	projectTypeCustomOptions := map[constants.ProjectType][]string{}
+	projectTypeRawCustomOptions := map[constants.ProjectType]string{
+		constants.ProjectTypeAndroid: configs.AndroidCustomOptions,
+		constants.ProjectTypeIOS:     configs.IOSCustomOptions,
+		constants.ProjectTypeTvOS:    configs.TvOSCustomOptions,
+		constants.ProjectTypeMacOS:   configs.MacOSCustomOptions,
+	}
+	for projectType, rawOptions := range projectTypeRawCustomOptions {
+		if rawOptions == "" {
+			continue
+		}
+
+		split, err := shellquote.Split(rawOptions)
+		if err != nil {
+			log.Error("Failed to split options (%s), error: %s", err)
+		}
+		projectTypeCustomOptions[projectType] = split
+	}
+	// ---
+
+	//
 	// build
 	fmt.Println()
 	log.Info("Building all projects in solution: %s", configs.XamarinSolution)
@@ -174,6 +215,13 @@ func main() {
 		os.Exit(1)
 	}
 
+	prepareCallback := func(project project.Model, command *buildtool.EditableCommand) {
+		options, ok := projectTypeCustomOptions[project.ProjectType]
+		if ok {
+			(*command).AppendOptions(options)
+		}
+	}
+
 	callback := func(project project.Model, command buildtool.PrintableCommand) {
 		fmt.Println()
 		log.Info("Building project: %s", project.Name)
@@ -181,7 +229,7 @@ func main() {
 		fmt.Println()
 	}
 
-	warnings, err := builder.BuildAllProjects(configs.XamarinConfiguration, configs.XamarinPlatform, callback)
+	warnings, err := builder.BuildAllProjects(configs.XamarinConfiguration, configs.XamarinPlatform, prepareCallback, callback)
 	if len(warnings) > 0 {
 		log.Warn("Build warnings:")
 		for _, warning := range warnings {
@@ -211,7 +259,7 @@ func main() {
 		log.Info("%s outputs:", projectType)
 
 		switch projectType {
-		case constants.ProjectTypeIos:
+		case constants.ProjectTypeIOS:
 			xcarchivePth, ok := outputMap[constants.OutputTypeXCArchive]
 			if ok {
 				log.Detail("exporintg iOS xcarchive: %s", xcarchivePth)
@@ -245,7 +293,7 @@ func main() {
 					os.Exit(1)
 				}
 			}
-		case constants.ProjectTypeMac:
+		case constants.ProjectTypeMacOS:
 			xcarchivePth, ok := outputMap[constants.OutputTypeXCArchive]
 			if ok {
 				log.Detail("exporintg macOS xcarchive: %s", xcarchivePth)
@@ -270,7 +318,7 @@ func main() {
 					os.Exit(1)
 				}
 			}
-		case constants.ProjectTypeTVOs:
+		case constants.ProjectTypeTvOS:
 			xcarchivePth, ok := outputMap[constants.OutputTypeXCArchive]
 			if ok {
 				log.Detail("exporintg tvOS xcarchive: %s", xcarchivePth)

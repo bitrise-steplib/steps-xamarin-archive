@@ -26,6 +26,9 @@ type Model struct {
 // OutputMap ...
 type OutputMap map[constants.ProjectType]map[constants.OutputType]string
 
+// PrepareBuildCommandCallback ...
+type PrepareBuildCommandCallback func(project project.Model, command *buildtool.EditableCommand)
+
 // BuildCommandCallback ...
 type BuildCommandCallback func(project project.Model, command buildtool.PrintableCommand)
 
@@ -86,9 +89,9 @@ func (builder Model) buildableProjects(configuration, platform string) []project
 			continue
 		}
 
-		if (proj.ProjectType == constants.ProjectTypeIos ||
-			proj.ProjectType == constants.ProjectTypeMac ||
-			proj.ProjectType == constants.ProjectTypeTVOs) &&
+		if (proj.ProjectType == constants.ProjectTypeIOS ||
+			proj.ProjectType == constants.ProjectTypeMacOS ||
+			proj.ProjectType == constants.ProjectTypeTvOS) &&
 			proj.OutputType != "exe" {
 			// fmt.Sprintf("project (%s) does not archivable based on output type (%s), skipping...", project.Name, project.OutputType)
 			continue
@@ -149,7 +152,7 @@ func (builder Model) CleanAll(callback ClearCommandCallback) error {
 }
 
 // BuildAllProjects ...
-func (builder Model) BuildAllProjects(configuration, platform string, callback BuildCommandCallback) ([]string, error) {
+func (builder Model) BuildAllProjects(configuration, platform string, prepareCallback PrepareBuildCommandCallback, callback BuildCommandCallback) ([]string, error) {
 	warnings := []string{}
 	buildableProjects := builder.buildableProjects(configuration, platform)
 	solutionConfig := utility.ToConfig(configuration, platform)
@@ -171,7 +174,7 @@ func (builder Model) BuildAllProjects(configuration, platform string, callback B
 		buildCommands := []buildtool.RunnableCommand{}
 
 		switch proj.ProjectType {
-		case constants.ProjectTypeIos, constants.ProjectTypeTVOs:
+		case constants.ProjectTypeIOS, constants.ProjectTypeTvOS:
 			if builder.forceMDTool {
 				command := mdtool.New(builder.solution.Pth).SetTarget("build")
 				command.SetConfiguration(projectConfig.Configuration)
@@ -200,7 +203,7 @@ func (builder Model) BuildAllProjects(configuration, platform string, callback B
 
 				buildCommands = append(buildCommands, command)
 			}
-		case constants.ProjectTypeMac:
+		case constants.ProjectTypeMacOS:
 			if builder.forceMDTool {
 				command := mdtool.New(builder.solution.Pth).SetTarget("build")
 				command.SetConfiguration(projectConfig.Configuration)
@@ -242,6 +245,12 @@ func (builder Model) BuildAllProjects(configuration, platform string, callback B
 
 		// Run build command
 		for _, buildCommand := range buildCommands {
+
+			if prepareCallback != nil {
+				editabeCommand := buildtool.EditableCommand(buildCommand)
+				prepareCallback(proj, &editabeCommand)
+			}
+
 			if callback != nil {
 				callback(proj, buildCommand)
 			}
@@ -283,7 +292,7 @@ func (builder Model) CollectOutput(configuration, platform string) (OutputMap, [
 		}
 
 		switch proj.ProjectType {
-		case constants.ProjectTypeIos, constants.ProjectTypeTVOs:
+		case constants.ProjectTypeIOS, constants.ProjectTypeTvOS:
 			if xcarchivePth, err := exportLatestXCArchiveFromXcodeArchives(proj.AssemblyName); err != nil {
 				warnings = append(warnings, err.Error())
 			} else if xcarchivePth != "" {
@@ -299,7 +308,7 @@ func (builder Model) CollectOutput(configuration, platform string) (OutputMap, [
 			} else if dsymPth != "" {
 				projectTypeOutputMap[constants.OutputTypeDSYM] = dsymPth
 			}
-		case constants.ProjectTypeMac:
+		case constants.ProjectTypeMacOS:
 			if xcarchivePth, err := exportLatestXCArchiveFromXcodeArchives(proj.AssemblyName); err != nil {
 				warnings = append(warnings, err.Error())
 			} else if xcarchivePth != "" {
