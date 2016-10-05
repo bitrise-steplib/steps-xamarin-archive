@@ -16,6 +16,64 @@ import (
 	"github.com/bitrise-tools/go-xamarin/project"
 )
 
+// ConfigsModel ...
+type ConfigsModel struct {
+	XamarinSolution      string
+	XamarinConfiguration string
+	XamarinPlatform      string
+	ProjectTypeWhitelist string
+	ForceMDTool          string
+
+	// Other configs
+	DeployDir string
+}
+
+func createConfigsModelFromEnvs() ConfigsModel {
+	return ConfigsModel{
+		XamarinSolution:      os.Getenv("xamarin_solution"),
+		XamarinConfiguration: os.Getenv("xamarin_configuration"),
+		XamarinPlatform:      os.Getenv("xamarin_platform"),
+		ProjectTypeWhitelist: os.Getenv("project_type_whitelist"),
+		ForceMDTool:          os.Getenv("force_mdtool"),
+
+		DeployDir: os.Getenv("BITRISE_DEPLOY_DIR"),
+	}
+}
+
+func (configs ConfigsModel) print() {
+	log.Info("Configs:")
+	log.Detail("- XamarinSolution: %s", configs.XamarinSolution)
+	log.Detail("- XamarinConfiguration: %s", configs.XamarinConfiguration)
+	log.Detail("- XamarinPlatform: %s", configs.XamarinPlatform)
+	log.Detail("- ProjectTypeWhitelist: %s", configs.ProjectTypeWhitelist)
+	log.Detail("- ForceMDTool: %s", configs.ForceMDTool)
+	fmt.Println()
+
+	log.Detail("- DeployDir: %s", configs.DeployDir)
+}
+
+func (configs ConfigsModel) validate() error {
+	// required
+	if configs.XamarinSolution == "" {
+		return errors.New("No XamarinSolution parameter specified!")
+	}
+	if exist, err := pathutil.IsPathExists(configs.XamarinSolution); err != nil {
+		return fmt.Errorf("Failed to check if XamarinSolution exist at: %s, error: %s", configs.XamarinSolution, err)
+	} else if !exist {
+		return fmt.Errorf("XamarinSolution not exist at: %s", configs.XamarinSolution)
+	}
+
+	if configs.XamarinConfiguration == "" {
+		return errors.New("No XamarinConfiguration parameter specified!")
+	}
+
+	if configs.XamarinPlatform == "" {
+		return errors.New("No XamarinPlatform parameter specified!")
+	}
+
+	return nil
+}
+
 func exportEnvironmentWithEnvman(keyStr, valueStr string) error {
 	cmd := cmdex.NewCommand("envman", "add", "--key", keyStr)
 	cmd.SetStdin(strings.NewReader(valueStr))
@@ -72,64 +130,6 @@ func exportArtifactFile(pth, deployDir, envKey string) error {
 	}
 
 	log.Done("artifact path (%s) is available in (%s) environment variable", deployPth, envKey)
-
-	return nil
-}
-
-// ConfigsModel ...
-type ConfigsModel struct {
-	XamarinSolution      string
-	XamarinConfiguration string
-	XamarinPlatform      string
-	ProjectTypeWhitelist string
-	ForceMDTool          string
-
-	// Other configs
-	DeployDir string
-}
-
-func createConfigsModelFromEnvs() ConfigsModel {
-	return ConfigsModel{
-		XamarinSolution:      os.Getenv("xamarin_solution"),
-		XamarinConfiguration: os.Getenv("xamarin_configuration"),
-		XamarinPlatform:      os.Getenv("xamarin_platform"),
-		ProjectTypeWhitelist: os.Getenv("project_type_whitelist"),
-		ForceMDTool:          os.Getenv("force_mdtool"),
-
-		DeployDir: os.Getenv("BITRISE_DEPLOY_DIR"),
-	}
-}
-
-func (configs ConfigsModel) print() {
-	log.Info("Configs:")
-	log.Detail("- XamarinSolution: %s", configs.XamarinSolution)
-	log.Detail("- XamarinConfiguration: %s", configs.XamarinConfiguration)
-	log.Detail("- XamarinPlatform: %s", configs.XamarinPlatform)
-	log.Detail("- ProjectTypeWhitelist: %s", configs.ProjectTypeWhitelist)
-	log.Detail("- ForceMDTool: %s", configs.ForceMDTool)
-	fmt.Println()
-
-	log.Detail("- DeployDir: %s", configs.DeployDir)
-}
-
-func (configs ConfigsModel) validate() error {
-	// required
-	if configs.XamarinSolution == "" {
-		return errors.New("No XamarinSolution parameter specified!")
-	}
-	if exist, err := pathutil.IsPathExists(configs.XamarinSolution); err != nil {
-		return fmt.Errorf("Failed to check if XamarinSolution exist at: %s, error: %s", configs.XamarinSolution, err)
-	} else if !exist {
-		return fmt.Errorf("XamarinSolution not exist at: %s", configs.XamarinSolution)
-	}
-
-	if configs.XamarinConfiguration == "" {
-		return errors.New("No XamarinConfiguration parameter specified!")
-	}
-
-	if configs.XamarinPlatform == "" {
-		return errors.New("No XamarinPlatform parameter specified!")
-	}
 
 	return nil
 }
@@ -195,7 +195,7 @@ func main() {
 
 	output, warnings := builder.CollectOutput(configs.XamarinConfiguration, configs.XamarinPlatform)
 	if len(warnings) > 0 {
-		log.Warn("Build warnings:")
+		log.Warn("Output warnings:")
 		for _, warning := range warnings {
 			log.Warn(warning)
 		}
