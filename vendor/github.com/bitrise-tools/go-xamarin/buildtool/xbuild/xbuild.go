@@ -19,6 +19,8 @@ type Model struct {
 
 	buildIpa       bool
 	archiveOnBuild bool
+
+	customOptions []string
 }
 
 // New ...
@@ -59,6 +61,11 @@ func (xbuild *Model) SetArchiveOnBuild() *Model {
 	return xbuild
 }
 
+// AppendOptions ...
+func (xbuild *Model) AppendOptions(options []string) {
+	xbuild.customOptions = options
+}
+
 func (xbuild Model) buildCommandSlice() []string {
 	cmdSlice := []string{xbuild.buildTool}
 
@@ -85,6 +92,8 @@ func (xbuild Model) buildCommandSlice() []string {
 	if xbuild.buildIpa {
 		cmdSlice = append(cmdSlice, "/p:BuildIpa=true")
 	}
+
+	cmdSlice = append(cmdSlice, xbuild.customOptions...)
 
 	//cmdSlice = append(cmdSlice, "/verbosity:minimal", "/nologo")
 

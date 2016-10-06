@@ -8,5 +8,11 @@ type PrintableCommand interface {
 // RunnableCommand ...
 type RunnableCommand interface {
 	PrintableCommand() string
+	AppendOptions(options []string)
 	Run() error
+}
+
+// EditableCommand ...
+type EditableCommand interface {
+	AppendOptions(options []string)
 }

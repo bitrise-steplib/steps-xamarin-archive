@@ -38,14 +38,14 @@ type OutputType string
 const (
 	// OutputTypeUnknown ...
 	OutputTypeUnknown OutputType = "unknown"
+	// OutputTypeAPK ...
+	OutputTypeAPK OutputType = "apk"
 	// OutputTypeXCArchive ...
 	OutputTypeXCArchive OutputType = "xcarchive"
 	// OutputTypeIPA ...
 	OutputTypeIPA OutputType = "ipa"
 	// OutputTypeDSYM ...
 	OutputTypeDSYM OutputType = "dsym"
-	// OutputTypeAPK ...
-	OutputTypeAPK OutputType = "apk"
 	// OutputTypePKG ...
 	OutputTypePKG OutputType = "pkg"
 	// OutputTypeAPP ...
@@ -76,27 +76,27 @@ type ProjectType string
 const (
 	// ProjectTypeUnknown ...
 	ProjectTypeUnknown ProjectType = "unknown"
-	// ProjectTypeIos ...
-	ProjectTypeIos ProjectType = "ios"
 	// ProjectTypeAndroid ...
 	ProjectTypeAndroid ProjectType = "android"
-	// ProjectTypeMac ...
-	ProjectTypeMac ProjectType = "mac"
-	// ProjectTypeTVOs ...
-	ProjectTypeTVOs ProjectType = "tvos"
+	// ProjectTypeIOS ...
+	ProjectTypeIOS ProjectType = "ios"
+	// ProjectTypeTvOS ...
+	ProjectTypeTvOS ProjectType = "tvos"
+	// ProjectTypeMacOS ...
+	ProjectTypeMacOS ProjectType = "macos"
 )
 
 // ParseProjectType ...
 func ParseProjectType(projectType string) (ProjectType, error) {
 	switch projectType {
-	case "ios":
-		return ProjectTypeIos, nil
 	case "android":
 		return ProjectTypeAndroid, nil
-	case "mac":
-		return ProjectTypeMac, nil
+	case "ios":
+		return ProjectTypeIOS, nil
 	case "tvos":
-		return ProjectTypeTVOs, nil
+		return ProjectTypeTvOS, nil
+	case "macos":
+		return ProjectTypeMacOS, nil
 	default:
 		return ProjectTypeUnknown, fmt.Errorf("invalid project type: %s", projectType)
 	}
@@ -111,14 +111,14 @@ func ParseProjectTypeGUID(guid string) (ProjectType, error) {
 		"FEACFBD2-3405-455C-9665-78FE426C6842",
 		"8FFB629D-F513-41CE-95D2-7ECE97B6EEEC",
 		"EE2C853D-36AF-4FDB-B1AD-8E90477E2198":
-		return ProjectTypeIos, nil
+		return ProjectTypeIOS, nil
 	case "EFBA0AD7-5A72-4C68-AF49-83D382785DCF", "10368E6C-D01B-4462-8E8B-01FC667A7035": // XamarinAndroid
 		return ProjectTypeAndroid, nil
 	case "1C533B1C-72DD-4CB1-9F6B-BF11D93BCFBE", "948B3504-5B70-4649-8FE4-BDE1FB46EC69", // MonoMac
 		"42C0BBD9-55CE-4FC1-8D90-A7348ABAFB23", "A3F8F2AB-B479-4A4A-A458-A89E7DC349F1": // XamarinMac
-		return ProjectTypeMac, nil
-	case "06FA79CB-D6CD-4721-BB4B-1BD202089C55": // XamarinProjectTypeTVOS
-		return ProjectTypeTVOs, nil
+		return ProjectTypeMacOS, nil
+	case "06FA79CB-D6CD-4721-BB4B-1BD202089C55": // XamarinProjectTypeTvOS
+		return ProjectTypeTvOS, nil
 	default:
 		return ProjectTypeUnknown, fmt.Errorf("Can not identify guid: %s", guid)
 	}

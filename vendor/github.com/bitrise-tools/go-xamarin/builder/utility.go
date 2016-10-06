@@ -48,16 +48,16 @@ func isProjectTypeAllowed(projectType constants.ProjectType, projectTypeWhiteLis
 
 	for _, filter := range projectTypeWhiteList {
 		switch filter {
-		case constants.ProjectTypeIos:
-			if projectType == constants.ProjectTypeIos {
+		case constants.ProjectTypeIOS:
+			if projectType == constants.ProjectTypeIOS {
 				return true
 			}
-		case constants.ProjectTypeTVOs:
-			if projectType == constants.ProjectTypeTVOs {
+		case constants.ProjectTypeTvOS:
+			if projectType == constants.ProjectTypeTvOS {
 				return true
 			}
-		case constants.ProjectTypeMac:
-			if projectType == constants.ProjectTypeMac {
+		case constants.ProjectTypeMacOS:
+			if projectType == constants.ProjectTypeMacOS {
 				return true
 			}
 		case constants.ProjectTypeAndroid:

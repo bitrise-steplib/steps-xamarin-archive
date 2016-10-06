@@ -16,6 +16,8 @@ type Model struct {
 	configuration string
 	platform      string
 	target        string
+
+	customOptions []string
 }
 
 // New ...
@@ -50,6 +52,11 @@ func (mdtool *Model) SetProjectName(projectName string) *Model {
 	return mdtool
 }
 
+// AppendOptions ...
+func (mdtool *Model) AppendOptions(options []string) {
+	mdtool.customOptions = options
+}
+
 func (mdtool Model) buildCommandSlice() []string {
 	cmdSlice := []string{mdtool.buildTool}
 
@@ -77,6 +84,8 @@ func (mdtool Model) buildCommandSlice() []string {
 	if mdtool.projectName != "" {
 		cmdSlice = append(cmdSlice, fmt.Sprintf("-p:%s", mdtool.projectName))
 	}
+
+	cmdSlice = append(cmdSlice, mdtool.customOptions...)
 
 	return cmdSlice
 }
