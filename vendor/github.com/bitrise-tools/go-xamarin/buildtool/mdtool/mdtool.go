@@ -113,5 +113,5 @@ func (mdtool Model) Run() error {
 		return command.Run()
 	*/
 
-	return runCommandInDiagnosticMode(*command, "Loading projects", false)
+	return runCommandInDiagnosticMode(*command, "Loading projects", true)
 }

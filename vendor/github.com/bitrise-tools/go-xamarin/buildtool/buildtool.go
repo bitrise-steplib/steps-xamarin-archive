@@ -16,3 +16,13 @@ type RunnableCommand interface {
 type EditableCommand interface {
 	AppendOptions(options []string)
 }
+
+// BuildCommandSliceContains ...
+func BuildCommandSliceContains(cmdSlice []RunnableCommand, cmd RunnableCommand) bool {
+	for _, c := range cmdSlice {
+		if c.PrintableCommand() == cmd.PrintableCommand() {
+			return true
+		}
+	}
+	return false
+}

@@ -30,7 +30,7 @@ type OutputMap map[constants.ProjectType]map[constants.OutputType]string
 type PrepareBuildCommandCallback func(project project.Model, command *buildtool.EditableCommand)
 
 // BuildCommandCallback ...
-type BuildCommandCallback func(project project.Model, command buildtool.PrintableCommand)
+type BuildCommandCallback func(project project.Model, command buildtool.PrintableCommand, alreadyPerformed bool)
 
 // ClearCommandCallback ...
 type ClearCommandCallback func(project project.Model, dir string)
@@ -154,8 +154,8 @@ func (builder Model) CleanAll(callback ClearCommandCallback) error {
 // BuildAllProjects ...
 func (builder Model) BuildAllProjects(configuration, platform string, prepareCallback PrepareBuildCommandCallback, callback BuildCommandCallback) ([]string, error) {
 	warnings := []string{}
-	buildableProjects := builder.buildableProjects(configuration, platform)
 	solutionConfig := utility.ToConfig(configuration, platform)
+	buildableProjects := builder.buildableProjects(configuration, platform)
 
 	for _, proj := range buildableProjects {
 		projectConfigKey, ok := proj.ConfigMap[solutionConfig]
@@ -244,19 +244,31 @@ func (builder Model) BuildAllProjects(configuration, platform string, prepareCal
 		}
 
 		// Run build command
-		for _, buildCommand := range buildCommands {
+		perfomedCommands := []buildtool.RunnableCommand{}
 
+		for _, buildCommand := range buildCommands {
+			// Callback to let the caller to modify the command
 			if prepareCallback != nil {
 				editabeCommand := buildtool.EditableCommand(buildCommand)
 				prepareCallback(proj, &editabeCommand)
 			}
 
-			if callback != nil {
-				callback(proj, buildCommand)
+			// Check if same command was already performed
+			alreadyPerformed := false
+			if buildtool.BuildCommandSliceContains(perfomedCommands, buildCommand) {
+				alreadyPerformed = true
 			}
 
-			if err := buildCommand.Run(); err != nil {
-				return warnings, err
+			// Callback to notify the caller about next running command
+			if callback != nil {
+				callback(proj, buildCommand, alreadyPerformed)
+			}
+
+			if !alreadyPerformed {
+				if err := buildCommand.Run(); err != nil {
+					return warnings, err
+				}
+				perfomedCommands = append(perfomedCommands, buildCommand)
 			}
 		}
 	}
