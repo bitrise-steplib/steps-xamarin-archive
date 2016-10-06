@@ -222,10 +222,13 @@ func main() {
 		}
 	}
 
-	callback := func(project project.Model, command buildtool.PrintableCommand) {
+	callback := func(project project.Model, command buildtool.PrintableCommand, alreadyPerformed bool) {
 		fmt.Println()
 		log.Info("Building project: %s", project.Name)
 		log.Done("$ %s", command.PrintableCommand())
+		if alreadyPerformed {
+			log.Warn("build command already performed, skipping...")
+		}
 		fmt.Println()
 	}
 
