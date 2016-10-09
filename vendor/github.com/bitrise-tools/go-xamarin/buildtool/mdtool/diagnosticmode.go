@@ -11,54 +11,7 @@ import (
 	"github.com/bitrise-io/go-utils/log"
 )
 
-// TimeoutHandlerModel ....
-type TimeoutHandlerModel struct {
-	timer   *time.Timer
-	timeout time.Duration
-
-	running bool
-
-	onTimeout func()
-}
-
-// Start ...
-func (handler *TimeoutHandlerModel) Start() {
-	if &handler.timeout != nil {
-		handler.timer = time.NewTimer(handler.timeout)
-		handler.running = true
-
-		go func() {
-			for _ = range handler.timer.C {
-				if handler.onTimeout != nil {
-					handler.onTimeout()
-				}
-			}
-		}()
-	}
-}
-
-// Stop ...
-func (handler *TimeoutHandlerModel) Stop() {
-	if handler.running {
-		handler.timer.Stop()
-		handler.running = false
-	}
-}
-
-// Running ...
-func (handler TimeoutHandlerModel) Running() bool {
-	return handler.running
-}
-
-// NewTimeoutHandler ...
-func NewTimeoutHandler(timeout time.Duration, onTimeout func()) TimeoutHandlerModel {
-	return TimeoutHandlerModel{
-		timeout:   timeout,
-		onTimeout: onTimeout,
-	}
-}
-
-func runCommandInDiagnosticMode(command cmdex.CommandModel, checkPattern string, retryOnHang bool) error {
+func runCommandInDiagnosticMode(command cmdex.CommandModel, checkPattern string, waitTime time.Duration, forceWaitTime time.Duration, retryOnHang bool) error {
 	log.Warn("Run in diagnostic mode")
 
 	cmd := command.GetCmd()
@@ -66,21 +19,31 @@ func runCommandInDiagnosticMode(command cmdex.CommandModel, checkPattern string,
 
 	// Create a timer that will FORCE kill the process if normal kill does not work
 	var forceKillError error
-	forceKillTimeoutHandler := NewTimeoutHandler(60*time.Second, func() {
-		log.Warn("Timeout")
-		timeout = true
-		forceKillError = cmd.Process.Signal(syscall.SIGKILL)
-	})
+	var forceKillTimeoutHandler *time.Timer
+	startForceKillTimeoutHandler := func() {
+		forceKillTimeoutHandler = time.AfterFunc(forceWaitTime, func() {
+			log.Warn("Process QUIT timeout")
+
+			forceKillError = cmd.Process.Signal(syscall.SIGKILL)
+		})
+	}
 	// ----
 
 	// Create a timer that will kill the process
 	var killError error
-	killTimeoutHandler := NewTimeoutHandler(300*time.Second, func() {
-		log.Warn("Timeout")
-		timeout = true
-		forceKillTimeoutHandler.Start()
-		killError = cmd.Process.Signal(syscall.SIGQUIT)
-	})
+	var killTimeoutHandler *time.Timer
+	startKillTimeoutHandler := func() {
+		killTimeoutHandler = time.AfterFunc(waitTime, func() {
+			log.Warn("Process timed out")
+
+			timeout = true
+
+			killError = cmd.Process.Signal(syscall.SIGQUIT)
+
+			startForceKillTimeoutHandler()
+		})
+	}
+
 	// ----
 
 	// Redirect output
@@ -95,9 +58,14 @@ func runCommandInDiagnosticMode(command cmdex.CommandModel, checkPattern string,
 			line := scanner.Text()
 			fmt.Println(line)
 
-			killTimeoutHandler.Stop()
+			// stop timeout handler if new line comes
+			if killTimeoutHandler != nil {
+				killTimeoutHandler.Stop()
+			}
+
+			// if line contains check pattern start hang timeout handler
 			if strings.Contains(strings.TrimSpace(line), checkPattern) {
-				killTimeoutHandler.Start()
+				startKillTimeoutHandler()
 			}
 		}
 	}()
@@ -113,20 +81,32 @@ func runCommandInDiagnosticMode(command cmdex.CommandModel, checkPattern string,
 	// Only proceed once the process has finished
 	cmdErr := cmd.Wait()
 
-	killTimeoutHandler.Stop()
-	forceKillTimeoutHandler.Stop()
+	if killTimeoutHandler != nil {
+		killTimeoutHandler.Stop()
+	}
 
-	if timeout {
-		return fmt.Errorf("timed out")
+	if forceKillTimeoutHandler != nil {
+		forceKillTimeoutHandler.Stop()
 	}
+
 	if cmdErr != nil {
-		return cmdErr
+		if !timeout || cmdErr.Error() != "signal: killed" {
+			return cmdErr
+		}
 	}
+
 	if killError != nil {
 		return killError
 	}
 	if forceKillError != nil {
 		return forceKillError
+	}
+
+	if timeout {
+		if retryOnHang {
+			return runCommandInDiagnosticMode(command, checkPattern, waitTime, forceWaitTime, false)
+		}
+		return fmt.Errorf("timed out")
 	}
 
 	return nil

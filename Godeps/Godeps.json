@@ -32,43 +32,43 @@
 		},
 		{
 			"ImportPath": "github.com/bitrise-tools/go-xamarin/builder",
-			"Comment": "0.9.0-9-g1a27993",
-			"Rev": "1a27993a52420935fc5909d477f2d0db79b6736f"
+			"Comment": "0.9.0-16-g4ff6181",
+			"Rev": "4ff618179cadff1f4a61517107a7a9ea263a4896"
 		},
 		{
 			"ImportPath": "github.com/bitrise-tools/go-xamarin/buildtool",
-			"Comment": "0.9.0-9-g1a27993",
-			"Rev": "1a27993a52420935fc5909d477f2d0db79b6736f"
+			"Comment": "0.9.0-16-g4ff6181",
+			"Rev": "4ff618179cadff1f4a61517107a7a9ea263a4896"
 		},
 		{
 			"ImportPath": "github.com/bitrise-tools/go-xamarin/buildtool/mdtool",
-			"Comment": "0.9.0-9-g1a27993",
-			"Rev": "1a27993a52420935fc5909d477f2d0db79b6736f"
+			"Comment": "0.9.0-16-g4ff6181",
+			"Rev": "4ff618179cadff1f4a61517107a7a9ea263a4896"
 		},
 		{
 			"ImportPath": "github.com/bitrise-tools/go-xamarin/buildtool/xbuild",
-			"Comment": "0.9.0-9-g1a27993",
-			"Rev": "1a27993a52420935fc5909d477f2d0db79b6736f"
+			"Comment": "0.9.0-16-g4ff6181",
+			"Rev": "4ff618179cadff1f4a61517107a7a9ea263a4896"
 		},
 		{
 			"ImportPath": "github.com/bitrise-tools/go-xamarin/constants",
-			"Comment": "0.9.0-9-g1a27993",
-			"Rev": "1a27993a52420935fc5909d477f2d0db79b6736f"
+			"Comment": "0.9.0-16-g4ff6181",
+			"Rev": "4ff618179cadff1f4a61517107a7a9ea263a4896"
 		},
 		{
 			"ImportPath": "github.com/bitrise-tools/go-xamarin/project",
-			"Comment": "0.9.0-9-g1a27993",
-			"Rev": "1a27993a52420935fc5909d477f2d0db79b6736f"
+			"Comment": "0.9.0-16-g4ff6181",
+			"Rev": "4ff618179cadff1f4a61517107a7a9ea263a4896"
 		},
 		{
 			"ImportPath": "github.com/bitrise-tools/go-xamarin/solution",
-			"Comment": "0.9.0-9-g1a27993",
-			"Rev": "1a27993a52420935fc5909d477f2d0db79b6736f"
+			"Comment": "0.9.0-16-g4ff6181",
+			"Rev": "4ff618179cadff1f4a61517107a7a9ea263a4896"
 		},
 		{
 			"ImportPath": "github.com/bitrise-tools/go-xamarin/utility",
-			"Comment": "0.9.0-9-g1a27993",
-			"Rev": "1a27993a52420935fc5909d477f2d0db79b6736f"
+			"Comment": "0.9.0-16-g4ff6181",
+			"Rev": "4ff618179cadff1f4a61517107a7a9ea263a4896"
 		},
 		{
 			"ImportPath": "github.com/kballard/go-shellquote",

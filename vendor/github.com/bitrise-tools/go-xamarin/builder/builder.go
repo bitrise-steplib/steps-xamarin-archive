@@ -30,7 +30,7 @@ type OutputMap map[constants.ProjectType]map[constants.OutputType]string
 type PrepareBuildCommandCallback func(project project.Model, command *buildtool.EditableCommand)
 
 // BuildCommandCallback ...
-type BuildCommandCallback func(project project.Model, command buildtool.PrintableCommand)
+type BuildCommandCallback func(project project.Model, command buildtool.PrintableCommand, alreadyPerformed bool)
 
 // ClearCommandCallback ...
 type ClearCommandCallback func(project project.Model, dir string)
@@ -74,8 +74,9 @@ func (builder Model) filteredProjects() []project.Model {
 	return projects
 }
 
-func (builder Model) buildableProjects(configuration, platform string) []project.Model {
+func (builder Model) buildableProjects(configuration, platform string) ([]project.Model, []string) {
 	projects := []project.Model{}
+	warnings := []string{}
 
 	solutionConfig := utility.ToConfig(configuration, platform)
 	filteredProjects := builder.filteredProjects()
@@ -85,7 +86,7 @@ func (builder Model) buildableProjects(configuration, platform string) []project
 		// Solution config - project config mapping
 		_, ok := proj.ConfigMap[solutionConfig]
 		if !ok {
-			// fmt.Sprintf("project (%s) do not have config for solution config (%s), skipping...", proj.Name, solutionConfig)
+			warnings = append(warnings, fmt.Sprintf("project (%s) do not have config for solution config (%s), skipping...", proj.Name, solutionConfig))
 			continue
 		}
 
@@ -93,12 +94,12 @@ func (builder Model) buildableProjects(configuration, platform string) []project
 			proj.ProjectType == constants.ProjectTypeMacOS ||
 			proj.ProjectType == constants.ProjectTypeTvOS) &&
 			proj.OutputType != "exe" {
-			// fmt.Sprintf("project (%s) does not archivable based on output type (%s), skipping...", project.Name, project.OutputType)
+			warnings = append(warnings, fmt.Sprintf("project (%s) does not archivable based on output type (%s), skipping...", proj.Name, proj.OutputType))
 			continue
 		}
 		if proj.ProjectType == constants.ProjectTypeAndroid &&
 			!proj.AndroidApplication {
-			// fmt.Sprintf("(%s) is not an android application project, skipping...", proj.Name)
+			warnings = append(warnings, fmt.Sprintf("(%s) is not an android application project, skipping...", proj.Name))
 			continue
 		}
 
@@ -107,7 +108,7 @@ func (builder Model) buildableProjects(configuration, platform string) []project
 		}
 	}
 
-	return projects
+	return projects, warnings
 }
 
 // CleanAll ...
@@ -154,8 +155,16 @@ func (builder Model) CleanAll(callback ClearCommandCallback) error {
 // BuildAllProjects ...
 func (builder Model) BuildAllProjects(configuration, platform string, prepareCallback PrepareBuildCommandCallback, callback BuildCommandCallback) ([]string, error) {
 	warnings := []string{}
-	buildableProjects := builder.buildableProjects(configuration, platform)
+
+	if err := validateSolutionConfig(builder.solution, configuration, platform); err != nil {
+		return []string{}, err
+	}
+
 	solutionConfig := utility.ToConfig(configuration, platform)
+	buildableProjects, warns := builder.buildableProjects(configuration, platform)
+	if len(buildableProjects) == 0 {
+		return warns, nil
+	}
 
 	for _, proj := range buildableProjects {
 		projectConfigKey, ok := proj.ConfigMap[solutionConfig]
@@ -183,7 +192,7 @@ func (builder Model) BuildAllProjects(configuration, platform string, prepareCal
 
 				buildCommands = append(buildCommands, command)
 
-				if isArchitectureArchiveable(projectConfig.MtouchArchs) {
+				if isArchitectureArchiveable(projectConfig.MtouchArchs...) {
 					command := mdtool.New(builder.solution.Pth).SetTarget("archive")
 					command.SetConfiguration(projectConfig.Configuration)
 					command.SetPlatform(projectConfig.Platform)
@@ -196,9 +205,9 @@ func (builder Model) BuildAllProjects(configuration, platform string, prepareCal
 				command.SetConfiguration(configuration)
 				command.SetPlatform(platform)
 
-				if isArchitectureArchiveable(projectConfig.MtouchArchs) {
-					command.SetBuildIpa()
-					command.SetArchiveOnBuild()
+				if isArchitectureArchiveable(projectConfig.MtouchArchs...) {
+					command.SetBuildIpa(true)
+					command.SetArchiveOnBuild(true)
 				}
 
 				buildCommands = append(buildCommands, command)
@@ -222,7 +231,7 @@ func (builder Model) BuildAllProjects(configuration, platform string, prepareCal
 				command := xbuild.New(builder.solution.Pth).SetTarget("Build")
 				command.SetConfiguration(configuration)
 				command.SetPlatform(platform)
-				command.SetArchiveOnBuild()
+				command.SetArchiveOnBuild(true)
 
 				buildCommands = append(buildCommands, command)
 			}
@@ -244,19 +253,31 @@ func (builder Model) BuildAllProjects(configuration, platform string, prepareCal
 		}
 
 		// Run build command
-		for _, buildCommand := range buildCommands {
+		perfomedCommands := []buildtool.RunnableCommand{}
 
+		for _, buildCommand := range buildCommands {
+			// Callback to let the caller to modify the command
 			if prepareCallback != nil {
 				editabeCommand := buildtool.EditableCommand(buildCommand)
 				prepareCallback(proj, &editabeCommand)
 			}
 
-			if callback != nil {
-				callback(proj, buildCommand)
+			// Check if same command was already performed
+			alreadyPerformed := false
+			if buildtool.BuildCommandSliceContains(perfomedCommands, buildCommand) {
+				alreadyPerformed = true
 			}
 
-			if err := buildCommand.Run(); err != nil {
-				return warnings, err
+			// Callback to notify the caller about next running command
+			if callback != nil {
+				callback(proj, buildCommand, alreadyPerformed)
+			}
+
+			if !alreadyPerformed {
+				if err := buildCommand.Run(); err != nil {
+					return warnings, err
+				}
+				perfomedCommands = append(perfomedCommands, buildCommand)
 			}
 		}
 	}
@@ -265,24 +286,21 @@ func (builder Model) BuildAllProjects(configuration, platform string, prepareCal
 }
 
 // CollectOutput ...
-func (builder Model) CollectOutput(configuration, platform string) (OutputMap, []string) {
+func (builder Model) CollectOutput(configuration, platform string) (OutputMap, error) {
 	outputMap := OutputMap{}
-	warnings := []string{}
 
-	buildableProjects := builder.buildableProjects(configuration, platform)
+	buildableProjects, _ := builder.buildableProjects(configuration, platform)
 
 	solutionConfig := utility.ToConfig(configuration, platform)
 
 	for _, proj := range buildableProjects {
 		projectConfigKey, ok := proj.ConfigMap[solutionConfig]
 		if !ok {
-			// fmt.Sprintf("project (%s) do not have config for solution config (%s), skipping...", proj.Name, solutionConfig)
 			continue
 		}
 
 		projectConfig, ok := proj.Configs[projectConfigKey]
 		if !ok {
-			// fmt.Sprintf("project (%s) contains mapping for solution config (%s), but does not have project configuration", proj.Name, solutionConfig)
 			continue
 		}
 
@@ -294,39 +312,46 @@ func (builder Model) CollectOutput(configuration, platform string) (OutputMap, [
 		switch proj.ProjectType {
 		case constants.ProjectTypeIOS, constants.ProjectTypeTvOS:
 			if xcarchivePth, err := exportLatestXCArchiveFromXcodeArchives(proj.AssemblyName); err != nil {
-				warnings = append(warnings, err.Error())
+				return OutputMap{}, err
 			} else if xcarchivePth != "" {
 				projectTypeOutputMap[constants.OutputTypeXCArchive] = xcarchivePth
 			}
-			if ipaPth, err := exportIpa(projectConfig.OutputDir, proj.AssemblyName); err != nil {
-				warnings = append(warnings, err.Error())
+			if ipaPth, err := exportLatestIpa(projectConfig.OutputDir, proj.AssemblyName); err != nil {
+				return OutputMap{}, err
 			} else if ipaPth != "" {
 				projectTypeOutputMap[constants.OutputTypeIPA] = ipaPth
 			}
-			if dsymPth, err := exportDSYM(projectConfig.OutputDir, proj.AssemblyName); err != nil {
-				warnings = append(warnings, err.Error())
+			if dsymPth, err := exportAppDSYM(projectConfig.OutputDir, proj.AssemblyName); err != nil {
+				return OutputMap{}, err
 			} else if dsymPth != "" {
 				projectTypeOutputMap[constants.OutputTypeDSYM] = dsymPth
 			}
 		case constants.ProjectTypeMacOS:
-			if xcarchivePth, err := exportLatestXCArchiveFromXcodeArchives(proj.AssemblyName); err != nil {
-				warnings = append(warnings, err.Error())
-			} else if xcarchivePth != "" {
-				projectTypeOutputMap[constants.OutputTypeXCArchive] = xcarchivePth
+			if builder.forceMDTool {
+				if xcarchivePth, err := exportLatestXCArchiveFromXcodeArchives(proj.AssemblyName); err != nil {
+					return OutputMap{}, err
+				} else if xcarchivePth != "" {
+					projectTypeOutputMap[constants.OutputTypeXCArchive] = xcarchivePth
+				}
 			}
 			if appPth, err := exportApp(projectConfig.OutputDir, proj.AssemblyName); err != nil {
-				warnings = append(warnings, err.Error())
+				return OutputMap{}, err
 			} else if appPth != "" {
 				projectTypeOutputMap[constants.OutputTypeAPP] = appPth
 			}
-			if pkgPth, err := exportPkg(projectConfig.OutputDir, proj.AssemblyName); err != nil {
-				warnings = append(warnings, err.Error())
+			if pkgPth, err := exportPKG(projectConfig.OutputDir, proj.AssemblyName); err != nil {
+				return OutputMap{}, err
 			} else if pkgPth != "" {
 				projectTypeOutputMap[constants.OutputTypePKG] = pkgPth
 			}
 		case constants.ProjectTypeAndroid:
-			if apkPth, err := exportApk(projectConfig.OutputDir, proj.ManifestPth, projectConfig.SignAndroid); err != nil {
-				warnings = append(warnings, err.Error())
+			packageName, err := androidPackageName(proj.ManifestPth)
+			if err != nil {
+				return OutputMap{}, err
+			}
+
+			if apkPth, err := exportApk(projectConfig.OutputDir, packageName); err != nil {
+				return OutputMap{}, err
 			} else if apkPth != "" {
 				projectTypeOutputMap[constants.OutputTypeAPK] = apkPth
 			}
@@ -337,5 +362,5 @@ func (builder Model) CollectOutput(configuration, platform string) (OutputMap, [
 		}
 	}
 
-	return outputMap, warnings
+	return outputMap, nil
 }
