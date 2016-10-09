@@ -74,8 +74,9 @@ func (builder Model) filteredProjects() []project.Model {
 	return projects
 }
 
-func (builder Model) buildableProjects(configuration, platform string) []project.Model {
+func (builder Model) buildableProjects(configuration, platform string) ([]project.Model, []string) {
 	projects := []project.Model{}
+	warnings := []string{}
 
 	solutionConfig := utility.ToConfig(configuration, platform)
 	filteredProjects := builder.filteredProjects()
@@ -85,7 +86,7 @@ func (builder Model) buildableProjects(configuration, platform string) []project
 		// Solution config - project config mapping
 		_, ok := proj.ConfigMap[solutionConfig]
 		if !ok {
-			// fmt.Sprintf("project (%s) do not have config for solution config (%s), skipping...", proj.Name, solutionConfig)
+			warnings = append(warnings, fmt.Sprintf("project (%s) do not have config for solution config (%s), skipping...", proj.Name, solutionConfig))
 			continue
 		}
 
@@ -93,12 +94,12 @@ func (builder Model) buildableProjects(configuration, platform string) []project
 			proj.ProjectType == constants.ProjectTypeMacOS ||
 			proj.ProjectType == constants.ProjectTypeTvOS) &&
 			proj.OutputType != "exe" {
-			// fmt.Sprintf("project (%s) does not archivable based on output type (%s), skipping...", project.Name, project.OutputType)
+			warnings = append(warnings, fmt.Sprintf("project (%s) does not archivable based on output type (%s), skipping...", proj.Name, proj.OutputType))
 			continue
 		}
 		if proj.ProjectType == constants.ProjectTypeAndroid &&
 			!proj.AndroidApplication {
-			// fmt.Sprintf("(%s) is not an android application project, skipping...", proj.Name)
+			warnings = append(warnings, fmt.Sprintf("(%s) is not an android application project, skipping...", proj.Name))
 			continue
 		}
 
@@ -107,7 +108,7 @@ func (builder Model) buildableProjects(configuration, platform string) []project
 		}
 	}
 
-	return projects
+	return projects, warnings
 }
 
 // CleanAll ...
@@ -155,11 +156,8 @@ func (builder Model) CleanAll(callback ClearCommandCallback) error {
 func (builder Model) BuildAllProjects(configuration, platform string, prepareCallback PrepareBuildCommandCallback, callback BuildCommandCallback) ([]string, error) {
 	warnings := []string{}
 	solutionConfig := utility.ToConfig(configuration, platform)
-	buildableProjects := builder.buildableProjects(configuration, platform)
-
+	buildableProjects, warnings := builder.buildableProjects(configuration, platform)
 	if len(buildableProjects) == 0 {
-		fmt.Printf("solution mapping: %#v\n", builder.solution.ConfigMap)
-		warnings = append(warnings, fmt.Sprintf("no buildable projects found for solution configuration (%s) and solution platform (%s)", configuration, platform))
 		return warnings, nil
 	}
 
@@ -247,8 +245,6 @@ func (builder Model) BuildAllProjects(configuration, platform string, prepareCal
 			}
 
 			buildCommands = append(buildCommands, command)
-		default:
-			warnings = append(warnings, fmt.Sprintf("projects (%s) project type is unknown", proj.Name))
 		}
 
 		// Run build command
@@ -288,20 +284,18 @@ func (builder Model) BuildAllProjects(configuration, platform string, prepareCal
 func (builder Model) CollectOutput(configuration, platform string) (OutputMap, error) {
 	outputMap := OutputMap{}
 
-	buildableProjects := builder.buildableProjects(configuration, platform)
+	buildableProjects, _ := builder.buildableProjects(configuration, platform)
 
 	solutionConfig := utility.ToConfig(configuration, platform)
 
 	for _, proj := range buildableProjects {
 		projectConfigKey, ok := proj.ConfigMap[solutionConfig]
 		if !ok {
-			// fmt.Sprintf("project (%s) do not have config for solution config (%s), skipping...", proj.Name, solutionConfig)
 			continue
 		}
 
 		projectConfig, ok := proj.Configs[projectConfigKey]
 		if !ok {
-			// fmt.Sprintf("project (%s) contains mapping for solution config (%s), but does not have project configuration", proj.Name, solutionConfig)
 			continue
 		}
 
