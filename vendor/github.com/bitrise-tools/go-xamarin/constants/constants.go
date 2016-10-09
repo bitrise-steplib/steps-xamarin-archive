@@ -55,12 +55,14 @@ const (
 // ParseOutputType ...
 func ParseOutputType(outputType string) (OutputType, error) {
 	switch outputType {
+	case "apk":
+		return OutputTypeAPK, nil
 	case "xcarchive":
 		return OutputTypeXCArchive, nil
 	case "ipa":
 		return OutputTypeIPA, nil
-	case "apk":
-		return OutputTypeAPK, nil
+	case "dsym":
+		return OutputTypeDSYM, nil
 	case "pkg":
 		return OutputTypePKG, nil
 	case "app":
@@ -105,20 +107,23 @@ func ParseProjectType(projectType string) (ProjectType, error) {
 // ParseProjectTypeGUID ...
 func ParseProjectTypeGUID(guid string) (ProjectType, error) {
 	switch guid {
-	case "E613F3A2-FE9C-494F-B74E-F63BCB86FEA6", // XamarinIos
+	case "EFBA0AD7-5A72-4C68-AF49-83D382785DCF",
+		"10368E6C-D01B-4462-8E8B-01FC667A7035": // XamarinAndroid
+		return ProjectTypeAndroid, nil
+	case "E613F3A2-FE9C-494F-B74E-F63BCB86FEA6", // XamarinIOS
 		"6BC8ED88-2882-458C-8E55-DFD12B67127B",
 		"F5B4F3BC-B597-4E2B-B552-EF5D8A32436F",
 		"FEACFBD2-3405-455C-9665-78FE426C6842",
 		"8FFB629D-F513-41CE-95D2-7ECE97B6EEEC",
 		"EE2C853D-36AF-4FDB-B1AD-8E90477E2198":
 		return ProjectTypeIOS, nil
-	case "EFBA0AD7-5A72-4C68-AF49-83D382785DCF", "10368E6C-D01B-4462-8E8B-01FC667A7035": // XamarinAndroid
-		return ProjectTypeAndroid, nil
-	case "1C533B1C-72DD-4CB1-9F6B-BF11D93BCFBE", "948B3504-5B70-4649-8FE4-BDE1FB46EC69", // MonoMac
-		"42C0BBD9-55CE-4FC1-8D90-A7348ABAFB23", "A3F8F2AB-B479-4A4A-A458-A89E7DC349F1": // XamarinMac
-		return ProjectTypeMacOS, nil
 	case "06FA79CB-D6CD-4721-BB4B-1BD202089C55": // XamarinProjectTypeTvOS
 		return ProjectTypeTvOS, nil
+	case "1C533B1C-72DD-4CB1-9F6B-BF11D93BCFBE", // MonoMac
+		"948B3504-5B70-4649-8FE4-BDE1FB46EC69",
+		"42C0BBD9-55CE-4FC1-8D90-A7348ABAFB23", // XamarinMac
+		"A3F8F2AB-B479-4A4A-A458-A89E7DC349F1":
+		return ProjectTypeMacOS, nil
 	default:
 		return ProjectTypeUnknown, fmt.Errorf("Can not identify guid: %s", guid)
 	}

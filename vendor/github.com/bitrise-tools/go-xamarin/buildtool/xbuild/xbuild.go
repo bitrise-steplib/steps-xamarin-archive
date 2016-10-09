@@ -3,6 +3,7 @@ package xbuild
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/bitrise-io/go-utils/cmdex"
 	"github.com/bitrise-tools/go-xamarin/constants"
@@ -10,12 +11,12 @@ import (
 
 // Model ...
 type Model struct {
-	buildTool string
+	buildTool   string
+	solutionPth string // can be solution or project path
 
-	projectPth    string // can be solution or project path
+	target        string
 	configuration string
 	platform      string
-	target        string
 
 	buildIpa       bool
 	archiveOnBuild bool
@@ -24,10 +25,10 @@ type Model struct {
 }
 
 // New ...
-func New(projectPth string) *Model {
+func New(solutionPth string) *Model {
 	return &Model{
-		projectPth: projectPth,
-		buildTool:  constants.XbuildPath,
+		solutionPth: solutionPth,
+		buildTool:   constants.XbuildPath,
 	}
 }
 
@@ -50,31 +51,35 @@ func (xbuild *Model) SetPlatform(platform string) *Model {
 }
 
 // SetBuildIpa ...
-func (xbuild *Model) SetBuildIpa() *Model {
-	xbuild.buildIpa = true
+func (xbuild *Model) SetBuildIpa(buildIpa bool) *Model {
+	xbuild.buildIpa = buildIpa
 	return xbuild
 }
 
 // SetArchiveOnBuild ...
-func (xbuild *Model) SetArchiveOnBuild() *Model {
-	xbuild.archiveOnBuild = true
+func (xbuild *Model) SetArchiveOnBuild(archive bool) *Model {
+	xbuild.archiveOnBuild = archive
 	return xbuild
 }
 
-// AppendOptions ...
-func (xbuild *Model) AppendOptions(options []string) {
+// SetCustomOptions ...
+func (xbuild *Model) SetCustomOptions(options ...string) {
 	xbuild.customOptions = options
 }
 
 func (xbuild Model) buildCommandSlice() []string {
 	cmdSlice := []string{xbuild.buildTool}
 
-	if xbuild.projectPth != "" {
-		cmdSlice = append(cmdSlice, xbuild.projectPth)
+	if xbuild.solutionPth != "" {
+		cmdSlice = append(cmdSlice, xbuild.solutionPth)
 	}
 
 	if xbuild.target != "" {
 		cmdSlice = append(cmdSlice, fmt.Sprintf("/target:%s", xbuild.target))
+	}
+
+	if xbuild.solutionPth != "" {
+		cmdSlice = append(cmdSlice, fmt.Sprintf("/p:SolutionDir=%s", filepath.Dir(xbuild.solutionPth)))
 	}
 
 	if xbuild.configuration != "" {
@@ -104,7 +109,7 @@ func (xbuild Model) buildCommandSlice() []string {
 func (xbuild Model) PrintableCommand() string {
 	cmdSlice := xbuild.buildCommandSlice()
 
-	return cmdex.PrintableCommandArgs(false, cmdSlice)
+	return cmdex.PrintableCommandArgs(true, cmdSlice)
 }
 
 // Run ...

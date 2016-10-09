@@ -1,20 +1,20 @@
 package buildtool
 
+// RunnableCommand ...
+type RunnableCommand interface {
+	PrintableCommand() string
+	SetCustomOptions(options ...string)
+	Run() error
+}
+
 // PrintableCommand ...
 type PrintableCommand interface {
 	PrintableCommand() string
 }
 
-// RunnableCommand ...
-type RunnableCommand interface {
-	PrintableCommand() string
-	AppendOptions(options []string)
-	Run() error
-}
-
 // EditableCommand ...
 type EditableCommand interface {
-	AppendOptions(options []string)
+	SetCustomOptions(options ...string)
 }
 
 // BuildCommandSliceContains ...

@@ -183,7 +183,7 @@ func (builder Model) BuildAllProjects(configuration, platform string, prepareCal
 
 				buildCommands = append(buildCommands, command)
 
-				if isArchitectureArchiveable(projectConfig.MtouchArchs) {
+				if isArchitectureArchiveable(projectConfig.MtouchArchs...) {
 					command := mdtool.New(builder.solution.Pth).SetTarget("archive")
 					command.SetConfiguration(projectConfig.Configuration)
 					command.SetPlatform(projectConfig.Platform)
@@ -196,9 +196,9 @@ func (builder Model) BuildAllProjects(configuration, platform string, prepareCal
 				command.SetConfiguration(configuration)
 				command.SetPlatform(platform)
 
-				if isArchitectureArchiveable(projectConfig.MtouchArchs) {
-					command.SetBuildIpa()
-					command.SetArchiveOnBuild()
+				if isArchitectureArchiveable(projectConfig.MtouchArchs...) {
+					command.SetBuildIpa(true)
+					command.SetArchiveOnBuild(true)
 				}
 
 				buildCommands = append(buildCommands, command)
@@ -222,7 +222,7 @@ func (builder Model) BuildAllProjects(configuration, platform string, prepareCal
 				command := xbuild.New(builder.solution.Pth).SetTarget("Build")
 				command.SetConfiguration(configuration)
 				command.SetPlatform(platform)
-				command.SetArchiveOnBuild()
+				command.SetArchiveOnBuild(true)
 
 				buildCommands = append(buildCommands, command)
 			}
@@ -277,9 +277,8 @@ func (builder Model) BuildAllProjects(configuration, platform string, prepareCal
 }
 
 // CollectOutput ...
-func (builder Model) CollectOutput(configuration, platform string) (OutputMap, []string) {
+func (builder Model) CollectOutput(configuration, platform string) (OutputMap, error) {
 	outputMap := OutputMap{}
-	warnings := []string{}
 
 	buildableProjects := builder.buildableProjects(configuration, platform)
 
@@ -306,39 +305,46 @@ func (builder Model) CollectOutput(configuration, platform string) (OutputMap, [
 		switch proj.ProjectType {
 		case constants.ProjectTypeIOS, constants.ProjectTypeTvOS:
 			if xcarchivePth, err := exportLatestXCArchiveFromXcodeArchives(proj.AssemblyName); err != nil {
-				warnings = append(warnings, err.Error())
+				return OutputMap{}, err
 			} else if xcarchivePth != "" {
 				projectTypeOutputMap[constants.OutputTypeXCArchive] = xcarchivePth
 			}
-			if ipaPth, err := exportIpa(projectConfig.OutputDir, proj.AssemblyName); err != nil {
-				warnings = append(warnings, err.Error())
+			if ipaPth, err := exportLatestIpa(projectConfig.OutputDir, proj.AssemblyName); err != nil {
+				return OutputMap{}, err
 			} else if ipaPth != "" {
 				projectTypeOutputMap[constants.OutputTypeIPA] = ipaPth
 			}
-			if dsymPth, err := exportDSYM(projectConfig.OutputDir, proj.AssemblyName); err != nil {
-				warnings = append(warnings, err.Error())
+			if dsymPth, err := exportAppDSYM(projectConfig.OutputDir, proj.AssemblyName); err != nil {
+				return OutputMap{}, err
 			} else if dsymPth != "" {
 				projectTypeOutputMap[constants.OutputTypeDSYM] = dsymPth
 			}
 		case constants.ProjectTypeMacOS:
-			if xcarchivePth, err := exportLatestXCArchiveFromXcodeArchives(proj.AssemblyName); err != nil {
-				warnings = append(warnings, err.Error())
-			} else if xcarchivePth != "" {
-				projectTypeOutputMap[constants.OutputTypeXCArchive] = xcarchivePth
+			if builder.forceMDTool {
+				if xcarchivePth, err := exportLatestXCArchiveFromXcodeArchives(proj.AssemblyName); err != nil {
+					return OutputMap{}, err
+				} else if xcarchivePth != "" {
+					projectTypeOutputMap[constants.OutputTypeXCArchive] = xcarchivePth
+				}
 			}
 			if appPth, err := exportApp(projectConfig.OutputDir, proj.AssemblyName); err != nil {
-				warnings = append(warnings, err.Error())
+				return OutputMap{}, err
 			} else if appPth != "" {
 				projectTypeOutputMap[constants.OutputTypeAPP] = appPth
 			}
-			if pkgPth, err := exportPkg(projectConfig.OutputDir, proj.AssemblyName); err != nil {
-				warnings = append(warnings, err.Error())
+			if pkgPth, err := exportPKG(projectConfig.OutputDir, proj.AssemblyName); err != nil {
+				return OutputMap{}, err
 			} else if pkgPth != "" {
 				projectTypeOutputMap[constants.OutputTypePKG] = pkgPth
 			}
 		case constants.ProjectTypeAndroid:
-			if apkPth, err := exportApk(projectConfig.OutputDir, proj.ManifestPth, projectConfig.SignAndroid); err != nil {
-				warnings = append(warnings, err.Error())
+			packageName, err := androidPackageName(proj.ManifestPth)
+			if err != nil {
+				return OutputMap{}, err
+			}
+
+			if apkPth, err := exportApk(projectConfig.OutputDir, packageName); err != nil {
+				return OutputMap{}, err
 			} else if apkPth != "" {
 				projectTypeOutputMap[constants.OutputTypeAPK] = apkPth
 			}
@@ -349,5 +355,5 @@ func (builder Model) CollectOutput(configuration, platform string) (OutputMap, [
 		}
 	}
 
-	return outputMap, warnings
+	return outputMap, nil
 }

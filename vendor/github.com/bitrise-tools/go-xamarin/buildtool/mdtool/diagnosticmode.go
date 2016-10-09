@@ -11,7 +11,7 @@ import (
 	"github.com/bitrise-io/go-utils/log"
 )
 
-func runCommandInDiagnosticMode(command cmdex.CommandModel, checkPattern string, retryOnHang bool) error {
+func runCommandInDiagnosticMode(command cmdex.CommandModel, checkPattern string, waitTime time.Duration, forceWaitTime time.Duration, retryOnHang bool) error {
 	log.Warn("Run in diagnostic mode")
 
 	cmd := command.GetCmd()
@@ -21,9 +21,9 @@ func runCommandInDiagnosticMode(command cmdex.CommandModel, checkPattern string,
 	var forceKillError error
 	var forceKillTimeoutHandler *time.Timer
 	startForceKillTimeoutHandler := func() {
-		forceKillTimeoutHandler = time.AfterFunc(60*time.Second, func() {
-			log.Warn("Timeout")
-			timeout = true
+		forceKillTimeoutHandler = time.AfterFunc(forceWaitTime, func() {
+			log.Warn("Process QUIT timeout")
+
 			forceKillError = cmd.Process.Signal(syscall.SIGKILL)
 		})
 	}
@@ -33,9 +33,11 @@ func runCommandInDiagnosticMode(command cmdex.CommandModel, checkPattern string,
 	var killError error
 	var killTimeoutHandler *time.Timer
 	startKillTimeoutHandler := func() {
-		killTimeoutHandler = time.AfterFunc(300*time.Second, func() {
-			log.Warn("Timeout")
+		killTimeoutHandler = time.AfterFunc(waitTime, func() {
+			log.Warn("Process timed out")
+
 			timeout = true
+
 			killError = cmd.Process.Signal(syscall.SIGQUIT)
 
 			startForceKillTimeoutHandler()
@@ -56,7 +58,12 @@ func runCommandInDiagnosticMode(command cmdex.CommandModel, checkPattern string,
 			line := scanner.Text()
 			fmt.Println(line)
 
-			killTimeoutHandler.Stop()
+			// stop timeout handler if new line comes
+			if killTimeoutHandler != nil {
+				killTimeoutHandler.Stop()
+			}
+
+			// if line contains check pattern start hang timeout handler
 			if strings.Contains(strings.TrimSpace(line), checkPattern) {
 				startKillTimeoutHandler()
 			}
@@ -74,11 +81,18 @@ func runCommandInDiagnosticMode(command cmdex.CommandModel, checkPattern string,
 	// Only proceed once the process has finished
 	cmdErr := cmd.Wait()
 
-	killTimeoutHandler.Stop()
-	forceKillTimeoutHandler.Stop()
+	if killTimeoutHandler != nil {
+		killTimeoutHandler.Stop()
+	}
+
+	if forceKillTimeoutHandler != nil {
+		forceKillTimeoutHandler.Stop()
+	}
 
 	if cmdErr != nil {
-		return cmdErr
+		if !timeout || cmdErr.Error() != "signal: killed" {
+			return cmdErr
+		}
 	}
 
 	if killError != nil {
@@ -90,7 +104,7 @@ func runCommandInDiagnosticMode(command cmdex.CommandModel, checkPattern string,
 
 	if timeout {
 		if retryOnHang {
-			return runCommandInDiagnosticMode(command, checkPattern, false)
+			return runCommandInDiagnosticMode(command, checkPattern, waitTime, forceWaitTime, false)
 		}
 		return fmt.Errorf("timed out")
 	}

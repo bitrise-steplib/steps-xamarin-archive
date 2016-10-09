@@ -2,9 +2,15 @@ package mdtool
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/bitrise-io/go-utils/cmdex"
 	"github.com/bitrise-tools/go-xamarin/constants"
+)
+
+const (
+	diagnosticModeWaitTime      = 300 * time.Second
+	diagnosticModeForceWaitTime = 60 * time.Second
 )
 
 // Model ...
@@ -52,8 +58,8 @@ func (mdtool *Model) SetProjectName(projectName string) *Model {
 	return mdtool
 }
 
-// AppendOptions ...
-func (mdtool *Model) AppendOptions(options []string) {
+// SetCustomOptions ...
+func (mdtool *Model) SetCustomOptions(options ...string) {
 	mdtool.customOptions = options
 }
 
@@ -94,7 +100,7 @@ func (mdtool Model) buildCommandSlice() []string {
 func (mdtool Model) PrintableCommand() string {
 	cmdSlice := mdtool.buildCommandSlice()
 
-	return cmdex.PrintableCommandArgs(false, cmdSlice)
+	return cmdex.PrintableCommandArgs(true, cmdSlice)
 }
 
 // Run ...
@@ -113,5 +119,5 @@ func (mdtool Model) Run() error {
 		return command.Run()
 	*/
 
-	return runCommandInDiagnosticMode(*command, "Loading projects", true)
+	return runCommandInDiagnosticMode(*command, "Loading projects", diagnosticModeWaitTime, diagnosticModeForceWaitTime, true)
 }
