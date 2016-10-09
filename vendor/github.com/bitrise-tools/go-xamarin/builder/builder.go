@@ -157,6 +157,11 @@ func (builder Model) BuildAllProjects(configuration, platform string, prepareCal
 	solutionConfig := utility.ToConfig(configuration, platform)
 	buildableProjects := builder.buildableProjects(configuration, platform)
 
+	if len(buildableProjects) == 0 {
+		warnings = append(warnings, fmt.Sprintf("no buildable projects found for solution configuration (%s) and solution platform (%s)", configuration, platform))
+		return warnings, nil
+	}
+
 	for _, proj := range buildableProjects {
 		projectConfigKey, ok := proj.ConfigMap[solutionConfig]
 		if !ok {
@@ -241,6 +246,8 @@ func (builder Model) BuildAllProjects(configuration, platform string, prepareCal
 			}
 
 			buildCommands = append(buildCommands, command)
+		default:
+			warnings = append(warnings, fmt.Sprintf("projects (%s) project type is unknown", proj.Name))
 		}
 
 		// Run build command
