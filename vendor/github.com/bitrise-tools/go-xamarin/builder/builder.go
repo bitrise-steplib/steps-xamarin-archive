@@ -158,6 +158,7 @@ func (builder Model) BuildAllProjects(configuration, platform string, prepareCal
 	buildableProjects := builder.buildableProjects(configuration, platform)
 
 	if len(buildableProjects) == 0 {
+		fmt.Printf("solution mapping: %#v\n", builder.solution.ConfigMap)
 		warnings = append(warnings, fmt.Sprintf("no buildable projects found for solution configuration (%s) and solution platform (%s)", configuration, platform))
 		return warnings, nil
 	}
