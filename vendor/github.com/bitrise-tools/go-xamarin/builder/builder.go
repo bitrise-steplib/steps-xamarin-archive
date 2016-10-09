@@ -155,10 +155,15 @@ func (builder Model) CleanAll(callback ClearCommandCallback) error {
 // BuildAllProjects ...
 func (builder Model) BuildAllProjects(configuration, platform string, prepareCallback PrepareBuildCommandCallback, callback BuildCommandCallback) ([]string, error) {
 	warnings := []string{}
+
+	if err := validateSolutionConfig(builder.solution, configuration, platform); err != nil {
+		return []string{}, err
+	}
+
 	solutionConfig := utility.ToConfig(configuration, platform)
-	buildableProjects, warnings := builder.buildableProjects(configuration, platform)
+	buildableProjects, warns := builder.buildableProjects(configuration, platform)
 	if len(buildableProjects) == 0 {
-		return warnings, nil
+		return warns, nil
 	}
 
 	for _, proj := range buildableProjects {
