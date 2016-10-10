@@ -139,8 +139,4 @@ workflows:
             rm -rf ./vendor
 
             go get -t -d ./...
-            # go get golang.org/x/sys/unix
-            # go get github.com/davecgh/go-spew/spew
-            # go get github.com/pmezard/go-difflib/difflib
-            # go get github.com/ryanuber/go-glob
             godep save ./...

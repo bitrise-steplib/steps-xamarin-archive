@@ -121,8 +121,8 @@ func exportArtifactDir(pth, deployDir, envKey string) (string, error) {
 	base := filepath.Base(pth)
 	deployPth := filepath.Join(deployDir, base)
 
-	if err := cmdex.CopyDir(pth, deployPth, false); err != nil {
-		return "", fmt.Errorf("Failed to move artifact (%s) to (%s)", pth, deployPth)
+	if err := cmdex.CopyDir(pth, deployDir, false); err != nil {
+		return "", fmt.Errorf("Failed to move artifact (%s) to (%s)", pth, deployDir)
 	}
 
 	if err := exportEnvironmentWithEnvman(envKey, deployPth); err != nil {
@@ -257,7 +257,7 @@ func main() {
 		case constants.ProjectTypeIOS:
 			xcarchivePth, ok := outputMap[constants.OutputTypeXCArchive]
 			if ok {
-				envKey := "BITRISE_IOS_XCARCHIVE_PATH"
+				envKey := "BITRISE_XCARCHIVE_PATH"
 				pth, err := exportArtifactDir(xcarchivePth, configs.DeployDir, envKey)
 				if err != nil {
 					log.Error("Failed to export xcarchive, error: %s", err)
@@ -267,7 +267,7 @@ func main() {
 			}
 			ipaPth, ok := outputMap[constants.OutputTypeIPA]
 			if ok {
-				envKey := "BITRISE_IOS_IPA_PATH"
+				envKey := "BITRISE_IPA_PATH"
 				pth, err := exportArtifactFile(ipaPth, configs.DeployDir, envKey)
 				if err != nil {
 					log.Error("Failed to export ipa, error: %s", err)
@@ -277,7 +277,7 @@ func main() {
 			}
 			dsymPth, ok := outputMap[constants.OutputTypeDSYM]
 			if ok {
-				envKey := "BITRISE_IOS_DSYM_PATH"
+				envKey := "BITRISE_DSYM_PATH"
 				pth, err := exportZipedArtifactDir(dsymPth, configs.DeployDir, envKey)
 				if err != nil {
 					log.Error("Failed to export dsym, error: %s", err)
