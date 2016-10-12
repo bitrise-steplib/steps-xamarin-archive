@@ -305,7 +305,7 @@ func main() {
 					log.Error("Failed to export xcarchive, error: %s", err)
 					os.Exit(1)
 				}
-				log.Done("apk path (%s) is available in (%s) environment variable", pth, envKey)
+				log.Done("xcarchive path (%s) is available in (%s) environment variable", pth, envKey)
 			}
 			appPth, ok := outputMap[constants.OutputTypeAPP]
 			if ok {
