@@ -270,7 +270,7 @@ func exportLatestXCArchive(outputDir, assemblyName string) (string, error) {
 		return "", nil
 	}
 
-	rePattern := fmt.Sprintf(".*/%s.xcarchive", assemblyName)
+	rePattern := fmt.Sprintf(".*/%s .*.xcarchive", assemblyName)
 	re := regexp.MustCompile(rePattern)
 
 	filteredArchives := []string{}
