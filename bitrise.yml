@@ -3,7 +3,7 @@ default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 
 app:
   envs:
-  - RELEASE_VERSION: 1.4.1
+  - RELEASE_VERSION: 0.9.0
 
   - SAMPLE_APP_URL: https://github.com/bitrise-samples/sample-apps-xamarin-cross-platform.git
   - BITRISE_PROJECT_PATH: Multiplatform.sln
@@ -127,9 +127,9 @@ workflows:
     envs:
       # if you want to share this step into a StepLib
       - MY_STEPLIB_REPO_FORK_GIT_URL: $MY_STEPLIB_REPO_FORK_GIT_URL
-      - STEP_ID_IN_STEPLIB: xamarin-builder
+      - STEP_ID_IN_STEPLIB: xamarin-archive
       - STEP_GIT_VERION_TAG_TO_SHARE: $RELEASE_VERSION
-      - STEP_GIT_CLONE_URL: https://github.com/bitrise-steplib/steps-xamarin-builder.git
+      - STEP_GIT_CLONE_URL: https://github.com/bitrise-steplib/steps-xamarin-archive.git
     description: |-
       If this is the first time you try to share a Step you should
       first call: $ bitrise share
