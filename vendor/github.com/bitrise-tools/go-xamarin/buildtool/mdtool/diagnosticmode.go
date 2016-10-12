@@ -14,7 +14,9 @@ import (
 func runCommandInDiagnosticMode(command cmdex.CommandModel, checkPattern string, waitTime time.Duration, forceWaitTime time.Duration, retryOnHang bool) error {
 	log.Warn("Run in diagnostic mode")
 
-	cmd := command.GetCmd()
+	// copy command model to avoid re-run error: Stdout already set
+	cmd := *command.GetCmd()
+
 	timeout := false
 
 	// Create a timer that will FORCE kill the process if normal kill does not work
