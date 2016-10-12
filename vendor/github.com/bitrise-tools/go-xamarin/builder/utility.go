@@ -216,7 +216,7 @@ func (d ByArchiveDate) Less(i, j int) bool {
 	// XamarinSampleApp.iOS 10-07-16 3.41 PM 2.xcarchive
 	// XamarinSampleApp.iOS 10-09-16 3.41 PM.xcarchive
 	layout = "01-02-06 3.04 PM"
-	datePattern := `.* (?P<date>[0-9-]+ [0-9.]+ PM|AM)[ ]*(?P<count>|[0-9]+).xcarchive`
+	datePattern := `.* (?P<date>[0-9-]+ [0-9.]+ [PM|AM]+)[ ]*(?P<count>|[0-9]+).xcarchive`
 	re := regexp.MustCompile(datePattern)
 
 	baseDates := []time.Time{}

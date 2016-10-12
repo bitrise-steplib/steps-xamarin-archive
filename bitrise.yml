@@ -122,7 +122,7 @@ workflows:
 
   # ----------------------------------------------------------------
   # --- Utility workflows
-  godeps_update:
+  godeps-update:
     title: Godeps update
     description: |
       Used for updating bitrise dependencies with godep
