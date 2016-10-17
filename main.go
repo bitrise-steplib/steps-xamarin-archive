@@ -72,7 +72,6 @@ func (configs ConfigsModel) print() {
 }
 
 func (configs ConfigsModel) validate() error {
-	// required
 	if configs.XamarinSolution == "" {
 		return errors.New("No XamarinSolution parameter specified!")
 	}
