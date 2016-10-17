@@ -6,13 +6,15 @@ import (
 	"path/filepath"
 
 	"github.com/bitrise-io/go-utils/pathutil"
-	"github.com/bitrise-tools/go-xamarin/buildtool"
-	"github.com/bitrise-tools/go-xamarin/buildtool/mdtool"
-	"github.com/bitrise-tools/go-xamarin/buildtool/xbuild"
+	"github.com/bitrise-tools/go-xamarin/analyzers/project"
+	"github.com/bitrise-tools/go-xamarin/analyzers/solution"
 	"github.com/bitrise-tools/go-xamarin/constants"
-	"github.com/bitrise-tools/go-xamarin/project"
-	"github.com/bitrise-tools/go-xamarin/solution"
+	"github.com/bitrise-tools/go-xamarin/tools"
 	"github.com/bitrise-tools/go-xamarin/utility"
+)
+
+const (
+	nunit3Console = "nunit3-console.exe"
 )
 
 // Model ...
@@ -23,14 +25,36 @@ type Model struct {
 	forceMDTool          bool
 }
 
-// OutputMap ...
-type OutputMap map[constants.ProjectType]map[constants.OutputType]string
+// OutputModel ...
+type OutputModel struct {
+	Pth        string
+	OutputType constants.OutputType
+}
 
-// PrepareBuildCommandCallback ...
-type PrepareBuildCommandCallback func(project project.Model, command *buildtool.EditableCommand)
+// ProjectOutputModel ...
+type ProjectOutputModel struct {
+	ProjectType constants.ProjectType
+	Outputs     []OutputModel
+}
+
+// ProjectOutputMap ...
+type ProjectOutputMap map[string]ProjectOutputModel // Project Name - ProjectOutputModel
+
+// TestProjectOutputModel ...
+type TestProjectOutputModel struct {
+	ProjectType          constants.ProjectType
+	ReferredProjectNames []string
+	Output               OutputModel
+}
+
+// TestProjectOutputMap ...
+type TestProjectOutputMap map[string]TestProjectOutputModel // Test Project Name - TestProjectOutputModel
+
+// PrepareCommandCallback ...
+type PrepareCommandCallback func(solutionName string, projectName string, projectType constants.ProjectType, command *tools.Editable)
 
 // BuildCommandCallback ...
-type BuildCommandCallback func(project project.Model, command buildtool.PrintableCommand, alreadyPerformed bool)
+type BuildCommandCallback func(solutionName string, projectName string, projectType constants.ProjectType, commandStr string, alreadyPerformed bool)
 
 // ClearCommandCallback ...
 type ClearCommandCallback func(project project.Model, dir string)
@@ -58,63 +82,11 @@ func New(solutionPth string, projectTypeWhitelist []constants.ProjectType, force
 	}, nil
 }
 
-func (builder Model) filteredProjects() []project.Model {
-	projects := []project.Model{}
-
-	for _, proj := range builder.solution.ProjectMap {
-		if !isProjectTypeAllowed(proj.ProjectType, builder.projectTypeWhitelist...) {
-			continue
-		}
-
-		if proj.ProjectType != constants.ProjectTypeUnknown {
-			projects = append(projects, proj)
-		}
-	}
-
-	return projects
-}
-
-func (builder Model) buildableProjects(configuration, platform string) ([]project.Model, []string) {
-	projects := []project.Model{}
-	warnings := []string{}
-
-	solutionConfig := utility.ToConfig(configuration, platform)
-	filteredProjects := builder.filteredProjects()
-
-	for _, proj := range filteredProjects {
-		//
-		// Solution config - project config mapping
-		_, ok := proj.ConfigMap[solutionConfig]
-		if !ok {
-			warnings = append(warnings, fmt.Sprintf("project (%s) do not have config for solution config (%s), skipping...", proj.Name, solutionConfig))
-			continue
-		}
-
-		if (proj.ProjectType == constants.ProjectTypeIOS ||
-			proj.ProjectType == constants.ProjectTypeMacOS ||
-			proj.ProjectType == constants.ProjectTypeTvOS) &&
-			proj.OutputType != "exe" {
-			warnings = append(warnings, fmt.Sprintf("project (%s) does not archivable based on output type (%s), skipping...", proj.Name, proj.OutputType))
-			continue
-		}
-		if proj.ProjectType == constants.ProjectTypeAndroid &&
-			!proj.AndroidApplication {
-			warnings = append(warnings, fmt.Sprintf("(%s) is not an android application project, skipping...", proj.Name))
-			continue
-		}
-
-		if proj.ProjectType != constants.ProjectTypeUnknown {
-			projects = append(projects, proj)
-		}
-	}
-
-	return projects, warnings
-}
-
 // CleanAll ...
 func (builder Model) CleanAll(callback ClearCommandCallback) error {
-	filteredProjects := builder.filteredProjects()
-	for _, proj := range filteredProjects {
+	whitelistedProjects := builder.whitelistedProjects()
+
+	for _, proj := range whitelistedProjects {
 
 		projectDir := filepath.Dir(proj.Pth)
 
@@ -152,125 +124,53 @@ func (builder Model) CleanAll(callback ClearCommandCallback) error {
 	return nil
 }
 
+// BuildSolution ...
+func (builder Model) BuildSolution(configuration, platform string, callback BuildCommandCallback) error {
+	buildCommand := builder.buildSolutionCommand(configuration, platform)
+
+	// Callback to notify the caller about next running command
+	if callback != nil {
+		callback(builder.solution.Name, "", constants.ProjectTypeUnknown, buildCommand.PrintableCommand(), true)
+	}
+
+	return buildCommand.Run()
+}
+
 // BuildAllProjects ...
-func (builder Model) BuildAllProjects(configuration, platform string, prepareCallback PrepareBuildCommandCallback, callback BuildCommandCallback) ([]string, error) {
+func (builder Model) BuildAllProjects(configuration, platform string, prepareCallback PrepareCommandCallback, callback BuildCommandCallback) ([]string, error) {
 	warnings := []string{}
 
 	if err := validateSolutionConfig(builder.solution, configuration, platform); err != nil {
 		return []string{}, err
 	}
 
-	solutionConfig := utility.ToConfig(configuration, platform)
 	buildableProjects, warns := builder.buildableProjects(configuration, platform)
 	if len(buildableProjects) == 0 {
 		return warns, nil
 	}
 
+	perfomedCommands := []tools.Printable{}
+
 	for _, proj := range buildableProjects {
-		projectConfigKey, ok := proj.ConfigMap[solutionConfig]
-		if !ok {
-			warnings = append(warnings, fmt.Sprintf("project (%s) do not have config for solution config (%s), skipping...", proj.Name, solutionConfig))
-			continue
-		}
-
-		projectConfig, ok := proj.Configs[projectConfigKey]
-		if !ok {
-			warnings = append(warnings, fmt.Sprintf("project (%s) contains mapping for solution config (%s), but does not have project configuration", proj.Name, solutionConfig))
-			continue
-		}
-
-		// Prepare build commands
-		buildCommands := []buildtool.RunnableCommand{}
-
-		switch proj.ProjectType {
-		case constants.ProjectTypeIOS, constants.ProjectTypeTvOS:
-			if builder.forceMDTool {
-				command := mdtool.New(builder.solution.Pth).SetTarget("build")
-				command.SetConfiguration(projectConfig.Configuration)
-				command.SetPlatform(projectConfig.Platform)
-				command.SetProjectName(proj.Name)
-
-				buildCommands = append(buildCommands, command)
-
-				if isArchitectureArchiveable(projectConfig.MtouchArchs...) {
-					command := mdtool.New(builder.solution.Pth).SetTarget("archive")
-					command.SetConfiguration(projectConfig.Configuration)
-					command.SetPlatform(projectConfig.Platform)
-					command.SetProjectName(proj.Name)
-
-					buildCommands = append(buildCommands, command)
-				}
-			} else {
-				command := xbuild.New(builder.solution.Pth).SetTarget("Build")
-				command.SetConfiguration(configuration)
-				command.SetPlatform(platform)
-
-				if isArchitectureArchiveable(projectConfig.MtouchArchs...) {
-					command.SetBuildIpa(true)
-					command.SetArchiveOnBuild(true)
-				}
-
-				buildCommands = append(buildCommands, command)
-			}
-		case constants.ProjectTypeMacOS:
-			if builder.forceMDTool {
-				command := mdtool.New(builder.solution.Pth).SetTarget("build")
-				command.SetConfiguration(projectConfig.Configuration)
-				command.SetPlatform(projectConfig.Platform)
-				command.SetProjectName(proj.Name)
-
-				buildCommands = append(buildCommands, command)
-
-				command = mdtool.New(builder.solution.Pth).SetTarget("archive")
-				command.SetConfiguration(projectConfig.Configuration)
-				command.SetPlatform(projectConfig.Platform)
-				command.SetProjectName(proj.Name)
-
-				buildCommands = append(buildCommands, command)
-			} else {
-				command := xbuild.New(builder.solution.Pth).SetTarget("Build")
-				command.SetConfiguration(configuration)
-				command.SetPlatform(platform)
-				command.SetArchiveOnBuild(true)
-
-				buildCommands = append(buildCommands, command)
-			}
-		case constants.ProjectTypeAndroid:
-			command := xbuild.New(proj.Pth)
-			if projectConfig.SignAndroid {
-				command.SetTarget("SignAndroidPackage")
-			} else {
-				command.SetTarget("PackageForAndroid")
-			}
-
-			command.SetConfiguration(projectConfig.Configuration)
-
-			if !isPlatformAnyCPU(projectConfig.Platform) {
-				command.SetPlatform(projectConfig.Platform)
-			}
-
-			buildCommands = append(buildCommands, command)
-		}
-
-		// Run build command
-		perfomedCommands := []buildtool.RunnableCommand{}
+		buildCommands, warns := builder.buildProjectCommand(configuration, platform, proj)
+		warnings = append(warnings, warns...)
 
 		for _, buildCommand := range buildCommands {
 			// Callback to let the caller to modify the command
 			if prepareCallback != nil {
-				editabeCommand := buildtool.EditableCommand(buildCommand)
-				prepareCallback(proj, &editabeCommand)
+				editabeCommand := tools.Editable(buildCommand)
+				prepareCallback(builder.solution.Name, proj.Name, proj.ProjectType, &editabeCommand)
 			}
 
 			// Check if same command was already performed
 			alreadyPerformed := false
-			if buildtool.BuildCommandSliceContains(perfomedCommands, buildCommand) {
+			if tools.PrintableSliceContains(perfomedCommands, buildCommand) {
 				alreadyPerformed = true
 			}
 
 			// Callback to notify the caller about next running command
 			if callback != nil {
-				callback(proj, buildCommand, alreadyPerformed)
+				callback(builder.solution.Name, proj.Name, proj.ProjectType, buildCommand.PrintableCommand(), alreadyPerformed)
 			}
 
 			if !alreadyPerformed {
@@ -285,9 +185,184 @@ func (builder Model) BuildAllProjects(configuration, platform string, prepareCal
 	return warnings, nil
 }
 
-// CollectOutput ...
-func (builder Model) CollectOutput(configuration, platform string) (OutputMap, error) {
-	outputMap := OutputMap{}
+// BuildAllXamarinUITestAndReferredProjects ...
+func (builder Model) BuildAllXamarinUITestAndReferredProjects(configuration, platform string, prepareCallback PrepareCommandCallback, callback BuildCommandCallback) ([]string, error) {
+	warnings := []string{}
+
+	if err := validateSolutionConfig(builder.solution, configuration, platform); err != nil {
+		return []string{}, err
+	}
+
+	buildableTestProjects, buildableReferredProjects, warns := builder.buildableXamarinUITestProjectsAndReferredProjects(configuration, platform)
+	if len(buildableTestProjects) == 0 || len(buildableReferredProjects) == 0 {
+		return warns, nil
+	}
+
+	perfomedCommands := []tools.Printable{}
+
+	//
+	// First build all referred projects
+	for _, proj := range buildableReferredProjects {
+		buildCommands, warns := builder.buildProjectCommand(configuration, platform, proj)
+		warnings = append(warnings, warns...)
+
+		for _, buildCommand := range buildCommands {
+			// Callback to let the caller to modify the command
+			if prepareCallback != nil {
+				editabeCommand := tools.Editable(buildCommand)
+				prepareCallback(builder.solution.Name, proj.Name, proj.ProjectType, &editabeCommand)
+			}
+
+			// Check if same command was already performed
+			alreadyPerformed := false
+			if tools.PrintableSliceContains(perfomedCommands, buildCommand) {
+				alreadyPerformed = true
+			}
+
+			// Callback to notify the caller about next running command
+			if callback != nil {
+				callback(builder.solution.Name, proj.Name, proj.ProjectType, buildCommand.PrintableCommand(), alreadyPerformed)
+			}
+
+			if !alreadyPerformed {
+				if err := buildCommand.Run(); err != nil {
+					return warnings, err
+				}
+				perfomedCommands = append(perfomedCommands, buildCommand)
+			}
+		}
+	}
+	// ---
+
+	//
+	// Then build all test projects
+	for _, testProj := range buildableTestProjects {
+		buildCommand, warns := builder.buildXamarinUITestProjectCommand(configuration, platform, testProj)
+		warnings = append(warnings, warns...)
+
+		// Callback to let the caller to modify the command
+		if prepareCallback != nil {
+			editabeCommand := tools.Editable(buildCommand)
+			prepareCallback(builder.solution.Name, testProj.Name, testProj.ProjectType, &editabeCommand)
+		}
+
+		// Check if same command was already performed
+		alreadyPerformed := false
+		if tools.PrintableSliceContains(perfomedCommands, buildCommand) {
+			alreadyPerformed = true
+		}
+
+		// Callback to notify the caller about next running command
+		if callback != nil {
+			callback(builder.solution.Name, testProj.Name, testProj.ProjectType, buildCommand.PrintableCommand(), alreadyPerformed)
+		}
+
+		if !alreadyPerformed {
+			if err := buildCommand.Run(); err != nil {
+				return warnings, err
+			}
+			perfomedCommands = append(perfomedCommands, buildCommand)
+		}
+	}
+	//
+
+	return warnings, nil
+}
+
+// BuildAllNunitTestProjects ...
+func (builder Model) BuildAllNunitTestProjects(configuration, platform string, prepareCallback PrepareCommandCallback, callback BuildCommandCallback) ([]string, error) {
+	warnings := []string{}
+
+	if err := validateSolutionConfig(builder.solution, configuration, platform); err != nil {
+		return []string{}, err
+	}
+
+	buildableProjects, warns := builder.buildableNunitTestProjects(configuration, platform)
+	if len(buildableProjects) == 0 {
+		return warns, nil
+	}
+
+	nunitDir := os.Getenv("NUNIT_PATH")
+	if nunitDir == "" {
+		return warnings, fmt.Errorf("NUNIT_PATH environment is not set, failed to determin nunit console path")
+	}
+
+	nunitConsolePth := filepath.Join(nunitDir, nunit3Console)
+	if exist, err := pathutil.IsPathExists(nunitConsolePth); err != nil {
+		return warnings, fmt.Errorf("Failed to check if nunit console exist at (%s), error: %s", nunitConsolePth, err)
+	} else if !exist {
+		return warnings, fmt.Errorf("nunit console not exist at: %s", nunitConsolePth)
+	}
+
+	perfomedCommands := []tools.Printable{}
+
+	//
+	// First build solution
+	buildCommand := builder.buildSolutionCommand(configuration, platform)
+
+	// Callback to let the caller to modify the command
+	if prepareCallback != nil {
+		editabeCommand := tools.Editable(buildCommand)
+		prepareCallback(builder.solution.Name, "", constants.ProjectTypeUnknown, &editabeCommand)
+	}
+
+	// Check if same command was already performed
+	alreadyPerformed := false
+	if tools.PrintableSliceContains(perfomedCommands, buildCommand) {
+		alreadyPerformed = true
+	}
+
+	// Callback to notify the caller about next running command
+	if callback != nil {
+		callback(builder.solution.Name, "", constants.ProjectTypeUnknown, buildCommand.PrintableCommand(), alreadyPerformed)
+	}
+
+	if !alreadyPerformed {
+		if err := buildCommand.Run(); err != nil {
+			return warnings, err
+		}
+		perfomedCommands = append(perfomedCommands, buildCommand)
+	}
+	// ---
+
+	//
+	// Then build all test projects
+	for _, testProj := range buildableProjects {
+		buildCommand, warns := builder.buildNunitTestProjectCommand(configuration, platform, testProj, nunitConsolePth)
+		warnings = append(warnings, warns...)
+
+		// Callback to let the caller to modify the command
+		if prepareCallback != nil {
+			editabeCommand := tools.Editable(buildCommand)
+			prepareCallback(builder.solution.Name, testProj.Name, testProj.ProjectType, &editabeCommand)
+		}
+
+		// Check if same command was already performed
+		alreadyPerformed := false
+		if tools.PrintableSliceContains(perfomedCommands, buildCommand) {
+			alreadyPerformed = true
+		}
+
+		// Callback to notify the caller about next running command
+		if callback != nil {
+			callback(builder.solution.Name, testProj.Name, testProj.ProjectType, buildCommand.PrintableCommand(), alreadyPerformed)
+		}
+
+		if !alreadyPerformed {
+			if err := buildCommand.Run(); err != nil {
+				return warnings, err
+			}
+			perfomedCommands = append(perfomedCommands, buildCommand)
+		}
+	}
+	// ---
+
+	return warnings, nil
+}
+
+// CollectProjectOutputs ...
+func (builder Model) CollectProjectOutputs(configuration, platform string) (ProjectOutputMap, error) {
+	projectOutputMap := ProjectOutputMap{}
 
 	buildableProjects, _ := builder.buildableProjects(configuration, platform)
 
@@ -304,63 +379,142 @@ func (builder Model) CollectOutput(configuration, platform string) (OutputMap, e
 			continue
 		}
 
-		projectTypeOutputMap, ok := outputMap[proj.ProjectType]
+		projectOutputs, ok := projectOutputMap[proj.Name]
 		if !ok {
-			projectTypeOutputMap = map[constants.OutputType]string{}
+			projectOutputs = ProjectOutputModel{
+				ProjectType: proj.ProjectType,
+				Outputs:     []OutputModel{},
+			}
 		}
 
 		switch proj.ProjectType {
 		case constants.ProjectTypeIOS, constants.ProjectTypeTvOS:
 			if xcarchivePth, err := exportLatestXCArchiveFromXcodeArchives(proj.AssemblyName); err != nil {
-				return OutputMap{}, err
+				return ProjectOutputMap{}, err
 			} else if xcarchivePth != "" {
-				projectTypeOutputMap[constants.OutputTypeXCArchive] = xcarchivePth
+				projectOutputs.Outputs = append(projectOutputs.Outputs, OutputModel{
+					Pth:        xcarchivePth,
+					OutputType: constants.OutputTypeXCArchive,
+				})
 			}
 			if ipaPth, err := exportLatestIpa(projectConfig.OutputDir, proj.AssemblyName); err != nil {
-				return OutputMap{}, err
+				return ProjectOutputMap{}, err
 			} else if ipaPth != "" {
-				projectTypeOutputMap[constants.OutputTypeIPA] = ipaPth
+				projectOutputs.Outputs = append(projectOutputs.Outputs, OutputModel{
+					Pth:        ipaPth,
+					OutputType: constants.OutputTypeIPA,
+				})
 			}
 			if dsymPth, err := exportAppDSYM(projectConfig.OutputDir, proj.AssemblyName); err != nil {
-				return OutputMap{}, err
+				return ProjectOutputMap{}, err
 			} else if dsymPth != "" {
-				projectTypeOutputMap[constants.OutputTypeDSYM] = dsymPth
+				projectOutputs.Outputs = append(projectOutputs.Outputs, OutputModel{
+					Pth:        dsymPth,
+					OutputType: constants.OutputTypeDSYM,
+				})
+			}
+			if appPth, err := exportApp(projectConfig.OutputDir, proj.AssemblyName); err != nil {
+				return ProjectOutputMap{}, err
+			} else if appPth != "" {
+				projectOutputs.Outputs = append(projectOutputs.Outputs, OutputModel{
+					Pth:        appPth,
+					OutputType: constants.OutputTypeAPP,
+				})
 			}
 		case constants.ProjectTypeMacOS:
 			if builder.forceMDTool {
 				if xcarchivePth, err := exportLatestXCArchiveFromXcodeArchives(proj.AssemblyName); err != nil {
-					return OutputMap{}, err
+					return ProjectOutputMap{}, err
 				} else if xcarchivePth != "" {
-					projectTypeOutputMap[constants.OutputTypeXCArchive] = xcarchivePth
+					projectOutputs.Outputs = append(projectOutputs.Outputs, OutputModel{
+						Pth:        xcarchivePth,
+						OutputType: constants.OutputTypeXCArchive,
+					})
 				}
 			}
 			if appPth, err := exportApp(projectConfig.OutputDir, proj.AssemblyName); err != nil {
-				return OutputMap{}, err
+				return ProjectOutputMap{}, err
 			} else if appPth != "" {
-				projectTypeOutputMap[constants.OutputTypeAPP] = appPth
+				projectOutputs.Outputs = append(projectOutputs.Outputs, OutputModel{
+					Pth:        appPth,
+					OutputType: constants.OutputTypeAPP,
+				})
 			}
 			if pkgPth, err := exportPKG(projectConfig.OutputDir, proj.AssemblyName); err != nil {
-				return OutputMap{}, err
+				return ProjectOutputMap{}, err
 			} else if pkgPth != "" {
-				projectTypeOutputMap[constants.OutputTypePKG] = pkgPth
+				projectOutputs.Outputs = append(projectOutputs.Outputs, OutputModel{
+					Pth:        pkgPth,
+					OutputType: constants.OutputTypePKG,
+				})
 			}
 		case constants.ProjectTypeAndroid:
 			packageName, err := androidPackageName(proj.ManifestPth)
 			if err != nil {
-				return OutputMap{}, err
+				return ProjectOutputMap{}, err
 			}
 
 			if apkPth, err := exportApk(projectConfig.OutputDir, packageName); err != nil {
-				return OutputMap{}, err
+				return ProjectOutputMap{}, err
 			} else if apkPth != "" {
-				projectTypeOutputMap[constants.OutputTypeAPK] = apkPth
+				projectOutputs.Outputs = append(projectOutputs.Outputs, OutputModel{
+					Pth:        apkPth,
+					OutputType: constants.OutputTypeAPK,
+				})
 			}
 		}
 
-		if len(projectTypeOutputMap) > 0 {
-			outputMap[proj.ProjectType] = projectTypeOutputMap
+		if len(projectOutputs.Outputs) > 0 {
+			projectOutputMap[proj.Name] = projectOutputs
 		}
 	}
 
-	return outputMap, nil
+	return projectOutputMap, nil
+}
+
+// CollectXamarinUITestProjectOutputs ...
+func (builder Model) CollectXamarinUITestProjectOutputs(configuration, platform string) (TestProjectOutputMap, error) {
+	testProjectOutputMap := TestProjectOutputMap{}
+
+	buildableTestProjects, _, _ := builder.buildableXamarinUITestProjectsAndReferredProjects(configuration, platform)
+
+	solutionConfig := utility.ToConfig(configuration, platform)
+
+	for _, testProj := range buildableTestProjects {
+		projectConfigKey, ok := testProj.ConfigMap[solutionConfig]
+		if !ok {
+			continue
+		}
+
+		projectConfig, ok := testProj.Configs[projectConfigKey]
+		if !ok {
+			continue
+		}
+
+		if dllPth, err := exportDLL(projectConfig.OutputDir, testProj.AssemblyName); err != nil {
+			return TestProjectOutputMap{}, err
+		} else if dllPth != "" {
+			referredProjectNames := []string{}
+			referredProjectIDs := testProj.ReferredProjectIDs
+			for _, referredProjectID := range referredProjectIDs {
+				referredProject, ok := builder.solution.ProjectMap[referredProjectID]
+				if !ok {
+					return TestProjectOutputMap{}, fmt.Errorf("project reference exist with project id: %s, but project not found in solution", referredProjectID)
+				}
+
+				referredProjectNames = append(referredProjectNames, referredProject.Name)
+			}
+
+			testProjectOutputMap[testProj.Name] = TestProjectOutputModel{
+				ProjectType:          testProj.ProjectType,
+				ReferredProjectNames: referredProjectNames,
+				Output: OutputModel{
+					Pth:        dllPth,
+					OutputType: constants.OutputTypeDLL,
+				},
+			}
+		}
+	}
+
+	return testProjectOutputMap, nil
 }

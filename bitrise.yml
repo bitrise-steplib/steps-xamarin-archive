@@ -3,10 +3,10 @@ default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 
 app:
   envs:
-  - RELEASE_VERSION: 1.4.1
+  - RELEASE_VERSION: 0.9.0
 
-  - SAMPLE_APP_URL: https://github.com/bitrise-io/sample-apps-xamarin-ios.git
-  - BITRISE_PROJECT_PATH: CreditCardValidator.iOS.sln
+  - SAMPLE_APP_URL: https://github.com/bitrise-samples/sample-apps-xamarin-cross-platform.git
+  - BITRISE_PROJECT_PATH: Multiplatform.sln
   - BITRISE_XAMARIN_CONFIGURATION: Release
   - BITRISE_XAMARIN_PLATFORM: iPhone
 
@@ -42,24 +42,70 @@ workflows:
     - xamarin-user-management: {}
     - nuget-restore:
     - path::./:
-        title: Step test
+        title: Step test - ios
+        inputs:
+        - project_type_whitelist: ios
     - script:
         title: Output test
         inputs:
         - content: |-
-            echo "BITRISE_IOS_XCARCHIVE_PATH: ${BITRISE_IOS_XCARCHIVE_PATH}"
-            echo "BITRISE_IOS_IPA_PATH: ${BITRISE_IOS_IPA_PATH}"
-            echo "BITRISE_IOS_DSYM_PATH: ${BITRISE_IOS_DSYM_PATH}"
+            echo "BITRISE_XCARCHIVE_PATH: $BITRISE_XCARCHIVE_PATH"
+            echo "BITRISE_IPA_PATH: $BITRISE_IPA_PATH"
+            echo "BITRISE_DSYM_PATH: $BITRISE_DSYM_PATH"
             echo
-            echo "BITRISE_APK_PATH: ${BITRISE_APK_PATH}"
+            echo "BITRISE_APK_PATH: $BITRISE_APK_PATH"
             echo
-            echo "BITRISE_TVOS_XCARCHIVE_PATH: ${BITRISE_TVOS_XCARCHIVE_PATH}"
-            echo "BITRISE_TVOS_IPA_PATH: ${BITRISE_TVOS_IPA_PATH}"
-            echo "BITRISE_TVOS_DSYM_PATH: ${BITRISE_TVOS_DSYM_PATH}"
+            echo "BITRISE_TVOS_XCARCHIVE_PATH: $BITRISE_TVOS_XCARCHIVE_PATH"
+            echo "BITRISE_TVOS_IPA_PATH: $BITRISE_TVOS_IPA_PATH"
+            echo "BITRISE_TVOS_DSYM_PATH: $BITRISE_TVOS_DSYM_PATH"
             echo
-            echo "BITRISE_MACOS_XCARCHIVE_PATH: ${BITRISE_MACOS_XCARCHIVE_PATH}"
-            echo "BITRISE_MACOS_APP_PATH: ${BITRISE_MACOS_APP_PATH}"
-            echo "BITRISE_MACOS_PKG_PATH: ${BITRISE_MACOS_PKG_PATH}"
+            echo "BITRISE_MACOS_XCARCHIVE_PATH: $BITRISE_MACOS_XCARCHIVE_PATH"
+            echo "BITRISE_MACOS_APP_PATH: $BITRISE_MACOS_APP_PATH"
+            echo "BITRISE_MACOS_PKG_PATH: $BITRISE_MACOS_PKG_PATH"
+    - path::./:
+        title: Step test - ios custom options
+        inputs:
+        - project_type_whitelist: ios
+        - ios_build_command_custom_options: /nologo
+    - script:
+        title: Output test
+        inputs:
+        - content: |-
+            echo "BITRISE_XCARCHIVE_PATH: $BITRISE_XCARCHIVE_PATH"
+            echo "BITRISE_IPA_PATH: $BITRISE_IPA_PATH"
+            echo "BITRISE_DSYM_PATH: $BITRISE_DSYM_PATH"
+            echo
+            echo "BITRISE_APK_PATH: $BITRISE_APK_PATH"
+            echo
+            echo "BITRISE_TVOS_XCARCHIVE_PATH: $BITRISE_TVOS_XCARCHIVE_PATH"
+            echo "BITRISE_TVOS_IPA_PATH: $BITRISE_TVOS_IPA_PATH"
+            echo "BITRISE_TVOS_DSYM_PATH: $BITRISE_TVOS_DSYM_PATH"
+            echo
+            echo "BITRISE_MACOS_XCARCHIVE_PATH: $BITRISE_MACOS_XCARCHIVE_PATH"
+            echo "BITRISE_MACOS_APP_PATH: $BITRISE_MACOS_APP_PATH"
+            echo "BITRISE_MACOS_PKG_PATH: $BITRISE_MACOS_PKG_PATH"
+    - path::./:
+        title: Step test - macos force mdtool
+        inputs:
+        - force_mdtool: "yes"
+        - project_type_whitelist: macos
+    - script:
+        title: Output test
+        inputs:
+        - content: |-
+            echo "BITRISE_XCARCHIVE_PATH: $BITRISE_XCARCHIVE_PATH"
+            echo "BITRISE_IPA_PATH: $BITRISE_IPA_PATH"
+            echo "BITRISE_DSYM_PATH: $BITRISE_DSYM_PATH"
+            echo
+            echo "BITRISE_APK_PATH: $BITRISE_APK_PATH"
+            echo
+            echo "BITRISE_TVOS_XCARCHIVE_PATH: $BITRISE_TVOS_XCARCHIVE_PATH"
+            echo "BITRISE_TVOS_IPA_PATH: $BITRISE_TVOS_IPA_PATH"
+            echo "BITRISE_TVOS_DSYM_PATH: $BITRISE_TVOS_DSYM_PATH"
+            echo
+            echo "BITRISE_MACOS_XCARCHIVE_PATH: $BITRISE_MACOS_XCARCHIVE_PATH"
+            echo "BITRISE_MACOS_APP_PATH: $BITRISE_MACOS_APP_PATH"
+            echo "BITRISE_MACOS_PKG_PATH: $BITRISE_MACOS_PKG_PATH"
 
   # ----------------------------------------------------------------
   # --- workflow to create Release version
@@ -81,9 +127,9 @@ workflows:
     envs:
       # if you want to share this step into a StepLib
       - MY_STEPLIB_REPO_FORK_GIT_URL: $MY_STEPLIB_REPO_FORK_GIT_URL
-      - STEP_ID_IN_STEPLIB: xamarin-builder
+      - STEP_ID_IN_STEPLIB: xamarin-archive
       - STEP_GIT_VERION_TAG_TO_SHARE: $RELEASE_VERSION
-      - STEP_GIT_CLONE_URL: https://github.com/bitrise-steplib/steps-xamarin-builder.git
+      - STEP_GIT_CLONE_URL: https://github.com/bitrise-steplib/steps-xamarin-archive.git
     description: |-
       If this is the first time you try to share a Step you should
       first call: $ bitrise share
@@ -122,7 +168,7 @@ workflows:
 
   # ----------------------------------------------------------------
   # --- Utility workflows
-  godeps_update:
+  godeps-update:
     title: Godeps update
     description: |
       Used for updating bitrise dependencies with godep
@@ -139,8 +185,4 @@ workflows:
             rm -rf ./vendor
 
             go get -t -d ./...
-            # go get golang.org/x/sys/unix
-            # go get github.com/davecgh/go-spew/spew
-            # go get github.com/pmezard/go-difflib/difflib
-            # go get github.com/ryanuber/go-glob
             godep save ./...

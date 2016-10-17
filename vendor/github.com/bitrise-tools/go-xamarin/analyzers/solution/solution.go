@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/bitrise-io/go-utils/fileutil"
+	"github.com/bitrise-tools/go-xamarin/analyzers/project"
 	"github.com/bitrise-tools/go-xamarin/constants"
-	"github.com/bitrise-tools/go-xamarin/project"
 	"github.com/bitrise-tools/go-xamarin/utility"
 )
 
@@ -27,31 +27,18 @@ const (
 
 // Model ...
 type Model struct {
-	ID  string
-	Pth string
+	Pth  string
+	Name string
+	ID   string
 
-	ConfigMap map[string]string
+	ConfigMap map[string]string // Internal Configuartion|Platform - External Configuartion|Platform map
 
-	ProjectMap map[string]project.Model
+	ProjectMap map[string]project.Model // Project ID - Project Model map
 }
 
 // New ...
 func New(pth string, loadProjects bool) (Model, error) {
 	return analyzeSolution(pth, loadProjects)
-}
-
-func (solution Model) String() string {
-	s := ""
-	s += fmt.Sprintf("ID: %s\n", solution.ID)
-	s += fmt.Sprintf("Pth: %s\n", solution.Pth)
-	s += "\n"
-	s += fmt.Sprintf("ConfigMap:\n")
-	s += fmt.Sprintf("%v\n", solution.ConfigMap)
-	s += "\n"
-	s += fmt.Sprintf("ProjectMap:\n")
-	s += fmt.Sprintf("%v\n", solution.ProjectMap)
-	s += "\n"
-	return s
 }
 
 // ConfigList ...
@@ -64,8 +51,13 @@ func (solution Model) ConfigList() []string {
 }
 
 func analyzeSolution(pth string, analyzeProjects bool) (Model, error) {
+	fileName := filepath.Base(pth)
+	ext := filepath.Ext(pth)
+	fileName = strings.TrimSuffix(fileName, ext)
+
 	solution := Model{
 		Pth:        pth,
+		Name:       fileName,
 		ConfigMap:  map[string]string{},
 		ProjectMap: map[string]project.Model{},
 	}
