@@ -7,6 +7,8 @@ const (
 	MDToolPath = "/Applications/Xamarin Studio.app/Contents/MacOS/mdtool"
 	// XbuildPath ...
 	XbuildPath = "/Library/Frameworks/Mono.framework/Commands/xbuild"
+	// MonoPath ...
+	MonoPath = "/Library/Frameworks/Mono.framework/Versions/Current/Commands/mono"
 )
 
 const (
@@ -20,72 +22,38 @@ const (
 	SHProjExt = ".shproj"
 )
 
-// TestFramwork ...
-type TestFramwork string
+// TestFramework ...
+type TestFramework int
 
 const (
-	// XamarinUITest ...
-	XamarinUITest TestFramwork = "Xamarin.UITest"
-	// NunitTest ...
-	NunitTest TestFramwork = "nunit.framework"
-	// NunitLiteTest ...
-	NunitLiteTest TestFramwork = "MonoTouch.NUnitLite"
+	// TestFrameworkXamarinUITest ...
+	TestFrameworkXamarinUITest TestFramework = iota
+	// TestFrameworkNunitTest ...
+	TestFrameworkNunitTest
+	// TestFrameworkNunitLiteTest ...
+	TestFrameworkNunitLiteTest
 )
-
-// OutputType ...
-type OutputType string
-
-const (
-	// OutputTypeUnknown ...
-	OutputTypeUnknown OutputType = "unknown"
-	// OutputTypeAPK ...
-	OutputTypeAPK OutputType = "apk"
-	// OutputTypeXCArchive ...
-	OutputTypeXCArchive OutputType = "xcarchive"
-	// OutputTypeIPA ...
-	OutputTypeIPA OutputType = "ipa"
-	// OutputTypeDSYM ...
-	OutputTypeDSYM OutputType = "dsym"
-	// OutputTypePKG ...
-	OutputTypePKG OutputType = "pkg"
-	// OutputTypeAPP ...
-	OutputTypeAPP OutputType = "app"
-)
-
-// ParseOutputType ...
-func ParseOutputType(outputType string) (OutputType, error) {
-	switch outputType {
-	case "apk":
-		return OutputTypeAPK, nil
-	case "xcarchive":
-		return OutputTypeXCArchive, nil
-	case "ipa":
-		return OutputTypeIPA, nil
-	case "dsym":
-		return OutputTypeDSYM, nil
-	case "pkg":
-		return OutputTypePKG, nil
-	case "app":
-		return OutputTypeAPP, nil
-	default:
-		return OutputTypeUnknown, fmt.Errorf("invalid output type: %s", outputType)
-	}
-}
 
 // ProjectType ...
-type ProjectType string
+type ProjectType int
 
 const (
 	// ProjectTypeUnknown ...
-	ProjectTypeUnknown ProjectType = "unknown"
+	ProjectTypeUnknown ProjectType = iota
 	// ProjectTypeAndroid ...
-	ProjectTypeAndroid ProjectType = "android"
+	ProjectTypeAndroid
 	// ProjectTypeIOS ...
-	ProjectTypeIOS ProjectType = "ios"
+	ProjectTypeIOS
 	// ProjectTypeTvOS ...
-	ProjectTypeTvOS ProjectType = "tvos"
+	ProjectTypeTvOS
 	// ProjectTypeMacOS ...
-	ProjectTypeMacOS ProjectType = "macos"
+	ProjectTypeMacOS
+	// ProjectTypeXamarinUITest ...
+	ProjectTypeXamarinUITest
+	// ProjectTypeNunitTest ...
+	ProjectTypeNunitTest
+	// ProjectTypeNunitLiteTest ...
+	ProjectTypeNunitLiteTest
 )
 
 // ParseProjectType ...
@@ -99,6 +67,12 @@ func ParseProjectType(projectType string) (ProjectType, error) {
 		return ProjectTypeTvOS, nil
 	case "macos":
 		return ProjectTypeMacOS, nil
+	case "xamarin-uitest":
+		return ProjectTypeXamarinUITest, nil
+	case "nunit-test":
+		return ProjectTypeNunitTest, nil
+	case "nunit-lite-test":
+		return ProjectTypeNunitLiteTest, nil
 	default:
 		return ProjectTypeUnknown, fmt.Errorf("invalid project type: %s", projectType)
 	}
@@ -126,5 +100,49 @@ func ParseProjectTypeGUID(guid string) (ProjectType, error) {
 		return ProjectTypeMacOS, nil
 	default:
 		return ProjectTypeUnknown, fmt.Errorf("Can not identify guid: %s", guid)
+	}
+}
+
+// OutputType ...
+type OutputType string
+
+const (
+	// OutputTypeUnknown ...
+	OutputTypeUnknown OutputType = "unknown"
+	// OutputTypeAPK ...
+	OutputTypeAPK OutputType = "apk"
+	// OutputTypeXCArchive ...
+	OutputTypeXCArchive OutputType = "xcarchive"
+	// OutputTypeIPA ...
+	OutputTypeIPA OutputType = "ipa"
+	// OutputTypeDSYM ...
+	OutputTypeDSYM OutputType = "dsym"
+	// OutputTypePKG ...
+	OutputTypePKG OutputType = "pkg"
+	// OutputTypeAPP ...
+	OutputTypeAPP OutputType = "app"
+	// OutputTypeDLL ...
+	OutputTypeDLL OutputType = "dll"
+)
+
+// ParseOutputType ...
+func ParseOutputType(outputType string) (OutputType, error) {
+	switch outputType {
+	case "apk":
+		return OutputTypeAPK, nil
+	case "xcarchive":
+		return OutputTypeXCArchive, nil
+	case "ipa":
+		return OutputTypeIPA, nil
+	case "dsym":
+		return OutputTypeDSYM, nil
+	case "pkg":
+		return OutputTypePKG, nil
+	case "app":
+		return OutputTypeAPP, nil
+	case "dll":
+		return OutputTypeDLL, nil
+	default:
+		return OutputTypeUnknown, fmt.Errorf("invalid output type: %s", outputType)
 	}
 }

@@ -11,9 +11,8 @@ import (
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-tools/go-xamarin/builder"
-	"github.com/bitrise-tools/go-xamarin/buildtool"
 	"github.com/bitrise-tools/go-xamarin/constants"
-	"github.com/bitrise-tools/go-xamarin/project"
+	"github.com/bitrise-tools/go-xamarin/tools"
 	shellquote "github.com/kballard/go-shellquote"
 )
 
@@ -208,17 +207,17 @@ func main() {
 		os.Exit(1)
 	}
 
-	prepareCallback := func(project project.Model, command *buildtool.EditableCommand) {
-		options, ok := projectTypeCustomOptions[project.ProjectType]
+	prepareCallback := func(solutionName string, projectName string, projectType constants.ProjectType, command *tools.Editable) {
+		options, ok := projectTypeCustomOptions[projectType]
 		if ok {
 			(*command).SetCustomOptions(options...)
 		}
 	}
 
-	callback := func(project project.Model, command buildtool.PrintableCommand, alreadyPerformed bool) {
+	callback := func(solutionName string, projectName string, projectType constants.ProjectType, commandStr string, alreadyPerformed bool) {
 		fmt.Println()
-		log.Info("Building project: %s", project.Name)
-		log.Done("$ %s", command.PrintableCommand())
+		log.Info("Building project: %s", projectName)
+		log.Done("$ %s", commandStr)
 		if alreadyPerformed {
 			log.Warn("build command already performed, skipping...")
 		}
@@ -237,125 +236,130 @@ func main() {
 		os.Exit(1)
 	}
 
-	output, err := builder.CollectOutput(configs.XamarinConfiguration, configs.XamarinPlatform)
+	output, err := builder.CollectProjectOutputs(configs.XamarinConfiguration, configs.XamarinPlatform)
 	if err != nil {
 		log.Error("Failed to collect output, error: %s", err)
 		os.Exit(1)
 	}
 	// ---
 
-	// export outputs
+	// Export outputs
 	fmt.Println()
 	log.Info("Exporting generated outputs...")
 
-	for projectType, outputMap := range output {
+	for projectName, projectOutput := range output {
 		fmt.Println()
-		log.Info("%s outputs:", projectType)
+		log.Info("%s outputs:", projectName)
 
-		switch projectType {
-		case constants.ProjectTypeIOS:
-			xcarchivePth, ok := outputMap[constants.OutputTypeXCArchive]
-			if ok {
-				envKey := "BITRISE_XCARCHIVE_PATH"
-				pth, err := exportArtifactDir(xcarchivePth, configs.DeployDir, envKey)
-				if err != nil {
-					log.Error("Failed to export xcarchive, error: %s", err)
-					os.Exit(1)
-				}
-				log.Done("xcarchive path (%s) is available in (%s) environment variable", pth, envKey)
-			}
-			ipaPth, ok := outputMap[constants.OutputTypeIPA]
-			if ok {
-				envKey := "BITRISE_IPA_PATH"
-				pth, err := exportArtifactFile(ipaPth, configs.DeployDir, envKey)
-				if err != nil {
-					log.Error("Failed to export ipa, error: %s", err)
-					os.Exit(1)
-				}
-				log.Done("ipa path (%s) is available in (%s) environment variable", pth, envKey)
-			}
-			dsymPth, ok := outputMap[constants.OutputTypeDSYM]
-			if ok {
-				envKey := "BITRISE_DSYM_PATH"
-				pth, err := exportZipedArtifactDir(dsymPth, configs.DeployDir, envKey)
-				if err != nil {
-					log.Error("Failed to export dsym, error: %s", err)
-					os.Exit(1)
-				}
-				log.Done("dsym path (%s) is available in (%s) environment variable", pth, envKey)
-			}
-		case constants.ProjectTypeAndroid:
-			apkPth, ok := outputMap[constants.OutputTypeAPK]
-			if ok {
+		for _, output := range projectOutput.Outputs {
+			// Android outputs
+			if projectOutput.ProjectType == constants.ProjectTypeAndroid && output.OutputType == constants.OutputTypeAPK {
 				envKey := "BITRISE_APK_PATH"
-				pth, err := exportArtifactFile(apkPth, configs.DeployDir, envKey)
+				pth, err := exportArtifactFile(output.Pth, configs.DeployDir, envKey)
 				if err != nil {
 					log.Error("Failed to export apk, error: %s", err)
 					os.Exit(1)
 				}
 				log.Done("apk path (%s) is available in (%s) environment variable", pth, envKey)
 			}
-		case constants.ProjectTypeMacOS:
-			xcarchivePth, ok := outputMap[constants.OutputTypeXCArchive]
-			if ok {
-				envKey := "BITRISE_MACOS_XCARCHIVE_PATH"
-				pth, err := exportArtifactDir(xcarchivePth, configs.DeployDir, envKey)
-				if err != nil {
-					log.Error("Failed to export xcarchive, error: %s", err)
-					os.Exit(1)
+
+			// IOS outputs
+			if projectOutput.ProjectType == constants.ProjectTypeIOS {
+				if output.OutputType == constants.OutputTypeXCArchive {
+					envKey := "BITRISE_XCARCHIVE_PATH"
+					pth, err := exportArtifactDir(output.Pth, configs.DeployDir, envKey)
+					if err != nil {
+						log.Error("Failed to export xcarchive, error: %s", err)
+						os.Exit(1)
+					}
+					log.Done("xcarchive path (%s) is available in (%s) environment variable", pth, envKey)
 				}
-				log.Done("xcarchive path (%s) is available in (%s) environment variable", pth, envKey)
+
+				if output.OutputType == constants.OutputTypeIPA {
+					envKey := "BITRISE_IPA_PATH"
+					pth, err := exportArtifactFile(output.Pth, configs.DeployDir, envKey)
+					if err != nil {
+						log.Error("Failed to export ipa, error: %s", err)
+						os.Exit(1)
+					}
+					log.Done("ipa path (%s) is available in (%s) environment variable", pth, envKey)
+				}
+
+				if output.OutputType == constants.OutputTypeDSYM {
+					envKey := "BITRISE_DSYM_PATH"
+					pth, err := exportZipedArtifactDir(output.Pth, configs.DeployDir, envKey)
+					if err != nil {
+						log.Error("Failed to export dsym, error: %s", err)
+						os.Exit(1)
+					}
+					log.Done("dsym path (%s) is available in (%s) environment variable", pth, envKey)
+				}
 			}
-			appPth, ok := outputMap[constants.OutputTypeAPP]
-			if ok {
-				envKey := "BITRISE_MACOS_APP_PATH"
-				pth, err := exportArtifactDir(appPth, configs.DeployDir, envKey)
-				if err != nil {
-					log.Error("Failed to export xcarchive, error: %s", err)
-					os.Exit(1)
+
+			// TvOS outputs
+			if projectOutput.ProjectType == constants.ProjectTypeTvOS {
+				if output.OutputType == constants.OutputTypeXCArchive {
+					envKey := "BITRISE_TVOS_XCARCHIVE_PATH"
+					pth, err := exportArtifactDir(output.Pth, configs.DeployDir, envKey)
+					if err != nil {
+						log.Error("Failed to export xcarchive, error: %s", err)
+						os.Exit(1)
+					}
+					log.Done("xcarchive path (%s) is available in (%s) environment variable", pth, envKey)
 				}
-				log.Done("app path (%s) is available in (%s) environment variable", pth, envKey)
+
+				if output.OutputType == constants.OutputTypeIPA {
+					envKey := "BITRISE_TVOS_IPA_PATH"
+					pth, err := exportArtifactFile(output.Pth, configs.DeployDir, envKey)
+					if err != nil {
+						log.Error("Failed to export ipa, error: %s", err)
+						os.Exit(1)
+					}
+					log.Done("ipa path (%s) is available in (%s) environment variable", pth, envKey)
+				}
+
+				if output.OutputType == constants.OutputTypeDSYM {
+					envKey := "BITRISE_TVOS_DSYM_PATH"
+					pth, err := exportZipedArtifactDir(output.Pth, configs.DeployDir, envKey)
+					if err != nil {
+						log.Error("Failed to export dsym, error: %s", err)
+						os.Exit(1)
+					}
+					log.Done("dsym path (%s) is available in (%s) environment variable", pth, envKey)
+				}
 			}
-			pkgPth, ok := outputMap[constants.OutputTypePKG]
-			if ok {
-				envKey := "BITRISE_MACOS_PKG_PATH"
-				pth, err := exportArtifactFile(pkgPth, configs.DeployDir, envKey)
-				if err != nil {
-					log.Error("Failed to export pkg, error: %s", err)
-					os.Exit(1)
+
+			// MacOS outputs
+			if projectOutput.ProjectType == constants.ProjectTypeMacOS {
+				if output.OutputType == constants.OutputTypeXCArchive {
+					envKey := "BITRISE_MACOS_XCARCHIVE_PATH"
+					pth, err := exportArtifactDir(output.Pth, configs.DeployDir, envKey)
+					if err != nil {
+						log.Error("Failed to export xcarchive, error: %s", err)
+						os.Exit(1)
+					}
+					log.Done("xcarchive path (%s) is available in (%s) environment variable", pth, envKey)
 				}
-				log.Done("pkg path (%s) is available in (%s) environment variable", pth, envKey)
-			}
-		case constants.ProjectTypeTvOS:
-			xcarchivePth, ok := outputMap[constants.OutputTypeXCArchive]
-			if ok {
-				envKey := "BITRISE_TVOS_XCARCHIVE_PATH"
-				pth, err := exportArtifactDir(xcarchivePth, configs.DeployDir, envKey)
-				if err != nil {
-					log.Error("Failed to export xcarchive, error: %s", err)
-					os.Exit(1)
+
+				if output.OutputType == constants.OutputTypeAPP {
+					envKey := "BITRISE_MACOS_APP_PATH"
+					pth, err := exportArtifactDir(output.Pth, configs.DeployDir, envKey)
+					if err != nil {
+						log.Error("Failed to export xcarchive, error: %s", err)
+						os.Exit(1)
+					}
+					log.Done("app path (%s) is available in (%s) environment variable", pth, envKey)
 				}
-				log.Done("xcarchive path (%s) is available in (%s) environment variable", pth, envKey)
-			}
-			ipaPth, ok := outputMap[constants.OutputTypeIPA]
-			if ok {
-				envKey := "BITRISE_TVOS_IPA_PATH"
-				pth, err := exportArtifactFile(ipaPth, configs.DeployDir, envKey)
-				if err != nil {
-					log.Error("Failed to export ipa, error: %s", err)
-					os.Exit(1)
+
+				if output.OutputType == constants.OutputTypePKG {
+					envKey := "BITRISE_MACOS_PKG_PATH"
+					pth, err := exportArtifactFile(output.Pth, configs.DeployDir, envKey)
+					if err != nil {
+						log.Error("Failed to export pkg, error: %s", err)
+						os.Exit(1)
+					}
+					log.Done("pkg path (%s) is available in (%s) environment variable", pth, envKey)
 				}
-				log.Done("ipa path (%s) is available in (%s) environment variable", pth, envKey)
-			}
-			dsymPth, ok := outputMap[constants.OutputTypeDSYM]
-			if ok {
-				envKey := "BITRISE_TVOS_DSYM_PATH"
-				pth, err := exportZipedArtifactDir(dsymPth, configs.DeployDir, envKey)
-				if err != nil {
-					log.Error("Failed to export dsym, error: %s", err)
-					os.Exit(1)
-				}
-				log.Done("dsym path (%s) is available in (%s) environment variable", pth, envKey)
 			}
 		}
 	}
