@@ -6,13 +6,16 @@ import (
 	"path/filepath"
 
 	"github.com/bitrise-io/go-utils/cmdex"
+	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-tools/go-xamarin/constants"
 )
 
 // Model ...
 type Model struct {
-	buildTool   string
-	solutionPth string // can be solution or project path
+	buildTool string
+
+	solutionPth string
+	projectPth  string
 
 	target        string
 	configuration string
@@ -25,11 +28,22 @@ type Model struct {
 }
 
 // New ...
-func New(solutionPth string) *Model {
-	return &Model{
-		solutionPth: solutionPth,
-		buildTool:   constants.XbuildPath,
+func New(solutionPth, projectPth string) (*Model, error) {
+	absSolutionPth, err := pathutil.AbsPath(solutionPth)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to expand path (%s), error: %s", solutionPth, err)
 	}
+
+	absProjectPth := ""
+	if projectPth != "" {
+		absPth, err := pathutil.AbsPath(projectPth)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to expand path (%s), error: %s", projectPth, err)
+		}
+		absProjectPth = absPth
+	}
+
+	return &Model{solutionPth: absSolutionPth, projectPth: absProjectPth, buildTool: constants.XbuildPath}, nil
 }
 
 // SetTarget ...
@@ -70,7 +84,9 @@ func (xbuild *Model) SetCustomOptions(options ...string) {
 func (xbuild Model) buildCommandSlice() []string {
 	cmdSlice := []string{xbuild.buildTool}
 
-	if xbuild.solutionPth != "" {
+	if xbuild.projectPth != "" {
+		cmdSlice = append(cmdSlice, xbuild.projectPth)
+	} else {
 		cmdSlice = append(cmdSlice, xbuild.solutionPth)
 	}
 
@@ -78,9 +94,7 @@ func (xbuild Model) buildCommandSlice() []string {
 		cmdSlice = append(cmdSlice, fmt.Sprintf("/target:%s", xbuild.target))
 	}
 
-	if xbuild.solutionPth != "" {
-		cmdSlice = append(cmdSlice, fmt.Sprintf("/p:SolutionDir=%s", filepath.Dir(xbuild.solutionPth)))
-	}
+	cmdSlice = append(cmdSlice, fmt.Sprintf("/p:SolutionDir=%s", filepath.Dir(xbuild.solutionPth)))
 
 	if xbuild.configuration != "" {
 		cmdSlice = append(cmdSlice, fmt.Sprintf("/p:Configuration=%s", xbuild.configuration))

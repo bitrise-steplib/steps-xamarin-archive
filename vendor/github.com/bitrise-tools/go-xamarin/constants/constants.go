@@ -35,25 +35,25 @@ const (
 )
 
 // ProjectType ...
-type ProjectType int
+type ProjectType string
 
 const (
 	// ProjectTypeUnknown ...
-	ProjectTypeUnknown ProjectType = iota
+	ProjectTypeUnknown ProjectType = "unkown"
 	// ProjectTypeAndroid ...
-	ProjectTypeAndroid
+	ProjectTypeAndroid ProjectType = "android"
 	// ProjectTypeIOS ...
-	ProjectTypeIOS
+	ProjectTypeIOS ProjectType = "ios"
 	// ProjectTypeTvOS ...
-	ProjectTypeTvOS
+	ProjectTypeTvOS ProjectType = "tvos"
 	// ProjectTypeMacOS ...
-	ProjectTypeMacOS
+	ProjectTypeMacOS ProjectType = "macos"
 	// ProjectTypeXamarinUITest ...
-	ProjectTypeXamarinUITest
+	ProjectTypeXamarinUITest ProjectType = "xamarin-uitest"
 	// ProjectTypeNunitTest ...
-	ProjectTypeNunitTest
+	ProjectTypeNunitTest ProjectType = "nunit-test"
 	// ProjectTypeNunitLiteTest ...
-	ProjectTypeNunitLiteTest
+	ProjectTypeNunitLiteTest ProjectType = "nunit-lite-test"
 )
 
 // ParseProjectType ...

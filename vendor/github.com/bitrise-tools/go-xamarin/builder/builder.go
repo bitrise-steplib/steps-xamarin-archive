@@ -126,7 +126,10 @@ func (builder Model) CleanAll(callback ClearCommandCallback) error {
 
 // BuildSolution ...
 func (builder Model) BuildSolution(configuration, platform string, callback BuildCommandCallback) error {
-	buildCommand := builder.buildSolutionCommand(configuration, platform)
+	buildCommand, err := builder.buildSolutionCommand(configuration, platform)
+	if err != nil {
+		return fmt.Errorf("Failed to create build command, error: %s", err)
+	}
 
 	// Callback to notify the caller about next running command
 	if callback != nil {
@@ -141,19 +144,22 @@ func (builder Model) BuildAllProjects(configuration, platform string, prepareCal
 	warnings := []string{}
 
 	if err := validateSolutionConfig(builder.solution, configuration, platform); err != nil {
-		return []string{}, err
+		return warnings, err
 	}
 
 	buildableProjects, warns := builder.buildableProjects(configuration, platform)
 	if len(buildableProjects) == 0 {
-		return warns, nil
+		return warns, fmt.Errorf("No project to build found")
 	}
 
 	perfomedCommands := []tools.Printable{}
 
 	for _, proj := range buildableProjects {
-		buildCommands, warns := builder.buildProjectCommand(configuration, platform, proj)
+		buildCommands, warns, err := builder.buildProjectCommand(configuration, platform, proj)
 		warnings = append(warnings, warns...)
+		if err != nil {
+			return warnings, fmt.Errorf("Failed to create build command, error: %s", err)
+		}
 
 		for _, buildCommand := range buildCommands {
 			// Callback to let the caller to modify the command
@@ -190,12 +196,12 @@ func (builder Model) BuildAllXamarinUITestAndReferredProjects(configuration, pla
 	warnings := []string{}
 
 	if err := validateSolutionConfig(builder.solution, configuration, platform); err != nil {
-		return []string{}, err
+		return warnings, err
 	}
 
 	buildableTestProjects, buildableReferredProjects, warns := builder.buildableXamarinUITestProjectsAndReferredProjects(configuration, platform)
 	if len(buildableTestProjects) == 0 || len(buildableReferredProjects) == 0 {
-		return warns, nil
+		return warns, fmt.Errorf("No project to build found")
 	}
 
 	perfomedCommands := []tools.Printable{}
@@ -203,8 +209,11 @@ func (builder Model) BuildAllXamarinUITestAndReferredProjects(configuration, pla
 	//
 	// First build all referred projects
 	for _, proj := range buildableReferredProjects {
-		buildCommands, warns := builder.buildProjectCommand(configuration, platform, proj)
+		buildCommands, warns, err := builder.buildProjectCommand(configuration, platform, proj)
 		warnings = append(warnings, warns...)
+		if err != nil {
+			return warnings, fmt.Errorf("Failed to create build command, error: %s", err)
+		}
 
 		for _, buildCommand := range buildCommands {
 			// Callback to let the caller to modify the command
@@ -237,8 +246,11 @@ func (builder Model) BuildAllXamarinUITestAndReferredProjects(configuration, pla
 	//
 	// Then build all test projects
 	for _, testProj := range buildableTestProjects {
-		buildCommand, warns := builder.buildXamarinUITestProjectCommand(configuration, platform, testProj)
+		buildCommand, warns, err := builder.buildXamarinUITestProjectCommand(configuration, platform, testProj)
 		warnings = append(warnings, warns...)
+		if err != nil {
+			return warnings, fmt.Errorf("Failed to create build command, error: %s", err)
+		}
 
 		// Callback to let the caller to modify the command
 		if prepareCallback != nil {
@@ -274,12 +286,12 @@ func (builder Model) BuildAllNunitTestProjects(configuration, platform string, p
 	warnings := []string{}
 
 	if err := validateSolutionConfig(builder.solution, configuration, platform); err != nil {
-		return []string{}, err
+		return warnings, err
 	}
 
 	buildableProjects, warns := builder.buildableNunitTestProjects(configuration, platform)
 	if len(buildableProjects) == 0 {
-		return warns, nil
+		return warns, fmt.Errorf("No project to build found")
 	}
 
 	nunitDir := os.Getenv("NUNIT_PATH")
@@ -298,7 +310,10 @@ func (builder Model) BuildAllNunitTestProjects(configuration, platform string, p
 
 	//
 	// First build solution
-	buildCommand := builder.buildSolutionCommand(configuration, platform)
+	buildCommand, err := builder.buildSolutionCommand(configuration, platform)
+	if err != nil {
+		return warnings, fmt.Errorf("Failed to create build command, error: %s", err)
+	}
 
 	// Callback to let the caller to modify the command
 	if prepareCallback != nil {
@@ -328,8 +343,11 @@ func (builder Model) BuildAllNunitTestProjects(configuration, platform string, p
 	//
 	// Then build all test projects
 	for _, testProj := range buildableProjects {
-		buildCommand, warns := builder.buildNunitTestProjectCommand(configuration, platform, testProj, nunitConsolePth)
+		buildCommand, warns, err := builder.buildNunitTestProjectCommand(configuration, platform, testProj, nunitConsolePth)
 		warnings = append(warnings, warns...)
+		if err != nil {
+			return warnings, fmt.Errorf("Failed to create build command, error: %s", err)
+		}
 
 		// Callback to let the caller to modify the command
 		if prepareCallback != nil {
@@ -473,8 +491,9 @@ func (builder Model) CollectProjectOutputs(configuration, platform string) (Proj
 }
 
 // CollectXamarinUITestProjectOutputs ...
-func (builder Model) CollectXamarinUITestProjectOutputs(configuration, platform string) (TestProjectOutputMap, error) {
+func (builder Model) CollectXamarinUITestProjectOutputs(configuration, platform string) (TestProjectOutputMap, []string, error) {
 	testProjectOutputMap := TestProjectOutputMap{}
+	warnings := []string{}
 
 	buildableTestProjects, _, _ := builder.buildableXamarinUITestProjectsAndReferredProjects(configuration, platform)
 
@@ -492,14 +511,14 @@ func (builder Model) CollectXamarinUITestProjectOutputs(configuration, platform 
 		}
 
 		if dllPth, err := exportDLL(projectConfig.OutputDir, testProj.AssemblyName); err != nil {
-			return TestProjectOutputMap{}, err
+			return TestProjectOutputMap{}, warnings, err
 		} else if dllPth != "" {
 			referredProjectNames := []string{}
 			referredProjectIDs := testProj.ReferredProjectIDs
 			for _, referredProjectID := range referredProjectIDs {
 				referredProject, ok := builder.solution.ProjectMap[referredProjectID]
 				if !ok {
-					return TestProjectOutputMap{}, fmt.Errorf("project reference exist with project id: %s, but project not found in solution", referredProjectID)
+					warnings = append(warnings, fmt.Sprintf("project reference exist with project id: %s, but project not found in solution", referredProjectID))
 				}
 
 				referredProjectNames = append(referredProjectNames, referredProject.Name)
@@ -516,5 +535,5 @@ func (builder Model) CollectXamarinUITestProjectOutputs(configuration, platform 
 		}
 	}
 
-	return testProjectOutputMap, nil
+	return testProjectOutputMap, warnings, nil
 }

@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/bitrise-io/go-utils/cmdex"
+	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-tools/go-xamarin/constants"
 )
 
@@ -18,10 +19,13 @@ type Model struct {
 }
 
 // New ...
-func New(nunitConsolePth string) *Model {
-	return &Model{
-		nunitConsolePth: nunitConsolePth,
+func New(nunitConsolePth string) (*Model, error) {
+	absNunitConsolePth, err := pathutil.AbsPath(nunitConsolePth)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to expand path (%s), error: %s", nunitConsolePth, err)
 	}
+
+	return &Model{nunitConsolePth: absNunitConsolePth}, nil
 }
 
 // SetProjectPth ...
