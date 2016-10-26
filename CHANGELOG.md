@@ -1,6 +1,12 @@
-## Changelog (Current version: 1.4.1)
+## Changelog (Current version: 1.0.0)
 
 -----------------
+
+### 1.0.0 (2016 Oct 26)
+
+* [5597ec7] prepare for 1.0.0
+* [34cfd20] go-xamarin update (#5)
+* [b136a2a] bitrise.yml updates
 
 ### 1.4.1 (2016 Sep 13)
 
@@ -161,4 +167,4 @@
 
 -----------------
 
-Updated: 2016 Sep 13
+Updated: 2016 Oct 26
