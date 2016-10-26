@@ -10,11 +10,8 @@ import (
 	"github.com/bitrise-tools/go-xamarin/analyzers/solution"
 	"github.com/bitrise-tools/go-xamarin/constants"
 	"github.com/bitrise-tools/go-xamarin/tools"
+	"github.com/bitrise-tools/go-xamarin/tools/nunit"
 	"github.com/bitrise-tools/go-xamarin/utility"
-)
-
-const (
-	nunit3Console = "nunit3-console.exe"
 )
 
 // Model ...
@@ -294,16 +291,9 @@ func (builder Model) BuildAllNunitTestProjects(configuration, platform string, p
 		return warns, fmt.Errorf("No project to build found")
 	}
 
-	nunitDir := os.Getenv("NUNIT_PATH")
-	if nunitDir == "" {
-		return warnings, fmt.Errorf("NUNIT_PATH environment is not set, failed to determin nunit console path")
-	}
-
-	nunitConsolePth := filepath.Join(nunitDir, nunit3Console)
-	if exist, err := pathutil.IsPathExists(nunitConsolePth); err != nil {
-		return warnings, fmt.Errorf("Failed to check if nunit console exist at (%s), error: %s", nunitConsolePth, err)
-	} else if !exist {
-		return warnings, fmt.Errorf("nunit console not exist at: %s", nunitConsolePth)
+	nunitConsolePth, err := nunit.SystemNunit3ConsolePath()
+	if err != nil {
+		return warnings, err
 	}
 
 	perfomedCommands := []tools.Printable{}
@@ -407,30 +397,35 @@ func (builder Model) CollectProjectOutputs(configuration, platform string) (Proj
 
 		switch proj.ProjectType {
 		case constants.ProjectTypeIOS, constants.ProjectTypeTvOS:
-			if xcarchivePth, err := exportLatestXCArchiveFromXcodeArchives(proj.AssemblyName); err != nil {
-				return ProjectOutputMap{}, err
-			} else if xcarchivePth != "" {
-				projectOutputs.Outputs = append(projectOutputs.Outputs, OutputModel{
-					Pth:        xcarchivePth,
-					OutputType: constants.OutputTypeXCArchive,
-				})
+			if isArchitectureArchiveable(projectConfig.MtouchArchs...) {
+				if xcarchivePth, err := exportLatestXCArchiveFromXcodeArchives(proj.AssemblyName); err != nil {
+					return ProjectOutputMap{}, err
+				} else if xcarchivePth != "" {
+					projectOutputs.Outputs = append(projectOutputs.Outputs, OutputModel{
+						Pth:        xcarchivePth,
+						OutputType: constants.OutputTypeXCArchive,
+					})
+				}
+
+				if ipaPth, err := exportLatestIpa(projectConfig.OutputDir, proj.AssemblyName); err != nil {
+					return ProjectOutputMap{}, err
+				} else if ipaPth != "" {
+					projectOutputs.Outputs = append(projectOutputs.Outputs, OutputModel{
+						Pth:        ipaPth,
+						OutputType: constants.OutputTypeIPA,
+					})
+				}
+
+				if dsymPth, err := exportAppDSYM(projectConfig.OutputDir, proj.AssemblyName); err != nil {
+					return ProjectOutputMap{}, err
+				} else if dsymPth != "" {
+					projectOutputs.Outputs = append(projectOutputs.Outputs, OutputModel{
+						Pth:        dsymPth,
+						OutputType: constants.OutputTypeDSYM,
+					})
+				}
 			}
-			if ipaPth, err := exportLatestIpa(projectConfig.OutputDir, proj.AssemblyName); err != nil {
-				return ProjectOutputMap{}, err
-			} else if ipaPth != "" {
-				projectOutputs.Outputs = append(projectOutputs.Outputs, OutputModel{
-					Pth:        ipaPth,
-					OutputType: constants.OutputTypeIPA,
-				})
-			}
-			if dsymPth, err := exportAppDSYM(projectConfig.OutputDir, proj.AssemblyName); err != nil {
-				return ProjectOutputMap{}, err
-			} else if dsymPth != "" {
-				projectOutputs.Outputs = append(projectOutputs.Outputs, OutputModel{
-					Pth:        dsymPth,
-					OutputType: constants.OutputTypeDSYM,
-				})
-			}
+
 			if appPth, err := exportApp(projectConfig.OutputDir, proj.AssemblyName); err != nil {
 				return ProjectOutputMap{}, err
 			} else if appPth != "" {
