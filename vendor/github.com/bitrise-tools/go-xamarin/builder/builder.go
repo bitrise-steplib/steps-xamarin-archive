@@ -13,7 +13,6 @@ import (
 	"github.com/bitrise-tools/go-xamarin/tools"
 	"github.com/bitrise-tools/go-xamarin/tools/nunit"
 	"github.com/bitrise-tools/go-xamarin/utility"
-	"github.com/bitrise-tools/xamarin-builder/solution"
 )
 
 // Model ...
