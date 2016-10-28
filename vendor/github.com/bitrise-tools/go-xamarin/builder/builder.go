@@ -145,6 +145,7 @@ func (builder Model) BuildAllProjects(configuration, platform string, prepareCal
 	}
 
 	buildableProjects, warns := builder.buildableProjects(configuration, platform)
+	warnings = append(warnings, warns...)
 	if len(buildableProjects) == 0 {
 		return warns, fmt.Errorf("No project to build found")
 	}
