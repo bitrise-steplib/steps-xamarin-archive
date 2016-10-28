@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-tools/go-xamarin/analyzers/project"
 	"github.com/bitrise-tools/go-xamarin/analyzers/solution"
@@ -12,6 +13,7 @@ import (
 	"github.com/bitrise-tools/go-xamarin/tools"
 	"github.com/bitrise-tools/go-xamarin/tools/nunit"
 	"github.com/bitrise-tools/go-xamarin/utility"
+	"github.com/bitrise-tools/xamarin-builder/solution"
 )
 
 // Model ...
@@ -65,6 +67,11 @@ func New(solutionPth string, projectTypeWhitelist []constants.ProjectType, force
 	solution, err := solution.New(solutionPth, true)
 	if err != nil {
 		return Model{}, err
+	}
+
+	for _, project := range solution.ProjectMap {
+		log.Warn("Project: %s", project.Name)
+		log.Warn(" type: %s", project.ProjectType)
 	}
 
 	if projectTypeWhitelist == nil {
