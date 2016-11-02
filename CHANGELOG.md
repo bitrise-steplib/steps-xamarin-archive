@@ -1,6 +1,11 @@
-## Changelog (Current version: 1.0.0)
+## Changelog (Current version: 1.1.0)
 
 -----------------
+
+### 1.1.0 (2016 Nov 02)
+
+* [3900e39] prepare for 1.1.0
+* [d7ebb91] Project type fix (#6)
 
 ### 1.0.0 (2016 Oct 26)
 
@@ -167,4 +172,4 @@
 
 -----------------
 
-Updated: 2016 Oct 26
+Updated: 2016 Nov 02
