@@ -72,12 +72,12 @@ type Model struct {
 	// !!! only set by solution analyze
 	ConfigMap map[string]string
 
-	ID           string
-	ProjectType  constants.ProjectType
-	OutputType   string
-	AssemblyName string
+	ID            string
+	SDK           constants.SDK
+	TestFramework constants.TestFramework
+	OutputType    string
+	AssemblyName  string
 
-	TestFrameworks     []constants.TestFramework
 	ReferredProjectIDs []string
 
 	ManifestPth        string
@@ -271,34 +271,36 @@ func analyzeTargetDefinition(project Model, pth string) (Model, error) {
 
 		// ProjectTypeGuids
 		if matches := regexp.MustCompile(typeGUIDsPattern).FindStringSubmatch(line); len(matches) == 2 {
-			projectType := constants.ProjectTypeUnknown
+			sdk := constants.SDKUnknown
 			projectTypeList := strings.Split(matches[1], ";")
 			for _, guid := range projectTypeList {
 				guid = strings.TrimPrefix(guid, "{")
 				guid = strings.TrimSuffix(guid, "}")
 
-				projectType, err = constants.ParseProjectTypeGUID(guid)
+				sdk, err = constants.ParseProjectTypeGUID(guid)
 				if err == nil {
 					break
 				}
 			}
 
-			project.ProjectType = projectType
+			project.SDK = sdk
 			continue
 		}
 
 		if match := regexp.MustCompile(referenceXamarinUITestPattern).FindString(line); match != "" {
-			project.TestFrameworks = append(project.TestFrameworks, constants.TestFrameworkXamarinUITest)
+			if project.TestFramework == "" {
+				project.TestFramework = constants.TestFrameworkXamarinUITest
+			}
 			continue
 		}
 
 		if match := regexp.MustCompile(referenceNunitFramework).FindString(line); match != "" {
-			project.TestFrameworks = append(project.TestFrameworks, constants.TestFrameworkNunitTest)
+			project.TestFramework = constants.TestFrameworkNunitTest
 			continue
 		}
 
 		if match := regexp.MustCompile(referenceNunitLiteFramework).FindString(line); match != "" {
-			project.TestFrameworks = append(project.TestFrameworks, constants.TestFrameworkNunitLiteTest)
+			project.TestFramework = constants.TestFrameworkNunitLiteTest
 			continue
 		}
 
@@ -335,33 +337,6 @@ func analyzeTargetDefinition(project Model, pth string) (Model, error) {
 		return Model{}, err
 	}
 
-	// Set Project Test Project Type
-	includesXamarinUITestFramwork := false
-	includesNunitTestFramework := false
-	includesNunitLiteTestFramwork := false
-
-	for _, testFramework := range project.TestFrameworks {
-		if testFramework == constants.TestFrameworkXamarinUITest {
-			includesXamarinUITestFramwork = true
-		}
-		if testFramework == constants.TestFrameworkNunitTest {
-			includesNunitTestFramework = true
-		}
-		if testFramework == constants.TestFrameworkNunitLiteTest {
-			includesNunitLiteTestFramwork = true
-		}
-	}
-
-	if includesXamarinUITestFramwork {
-		project.ProjectType = constants.ProjectTypeXamarinUITest
-	} else if includesNunitTestFramework {
-		project.ProjectType = constants.ProjectTypeNunitTest
-	}
-
-	if includesNunitLiteTestFramwork {
-		project.ProjectType = constants.ProjectTypeNunitLiteTest
-	}
-
 	return project, nil
 }
 
@@ -376,10 +351,12 @@ func analyzeProject(pth string) (Model, error) {
 	fileName = strings.TrimSuffix(fileName, ext)
 
 	project := Model{
-		Pth:       absPth,
-		Name:      fileName,
-		ConfigMap: map[string]string{},
-		Configs:   map[string]ConfigurationPlatformModel{},
+		Pth:           absPth,
+		Name:          fileName,
+		ConfigMap:     map[string]string{},
+		Configs:       map[string]ConfigurationPlatformModel{},
+		SDK:           constants.SDKUnknown,
+		TestFramework: constants.TestFrameworkUnknown,
 	}
 	return analyzeTargetDefinition(project, absPth)
 }

@@ -12,11 +12,11 @@ func (builder Model) whitelistedProjects() []project.Model {
 	projects := []project.Model{}
 
 	for _, proj := range builder.solution.ProjectMap {
-		if !whitelistAllows(proj.ProjectType, builder.projectTypeWhitelist...) {
+		if !whitelistAllows(proj.SDK, builder.projectTypeWhitelist...) {
 			continue
 		}
 
-		if proj.ProjectType != constants.ProjectTypeUnknown {
+		if proj.SDK != constants.SDKUnknown {
 			projects = append(projects, proj)
 		}
 	}
@@ -41,20 +41,20 @@ func (builder Model) buildableProjects(configuration, platform string) ([]projec
 			continue
 		}
 
-		if (proj.ProjectType == constants.ProjectTypeIOS ||
-			proj.ProjectType == constants.ProjectTypeMacOS ||
-			proj.ProjectType == constants.ProjectTypeTvOS) &&
+		if (proj.SDK == constants.SDKIOS ||
+			proj.SDK == constants.SDKMacOS ||
+			proj.SDK == constants.SDKTvOS) &&
 			proj.OutputType != "exe" {
 			warnings = append(warnings, fmt.Sprintf("project (%s) does not archivable based on output type (%s), skipping...", proj.Name, proj.OutputType))
 			continue
 		}
-		if proj.ProjectType == constants.ProjectTypeAndroid &&
+		if proj.SDK == constants.SDKAndroid &&
 			!proj.AndroidApplication {
 			warnings = append(warnings, fmt.Sprintf("(%s) is not an android application project, skipping...", proj.Name))
 			continue
 		}
 
-		if proj.ProjectType != constants.ProjectTypeUnknown {
+		if proj.SDK != constants.SDKUnknown {
 			projects = append(projects, proj)
 		}
 	}
@@ -72,7 +72,7 @@ func (builder Model) buildableXamarinUITestProjectsAndReferredProjects(configura
 
 	for _, proj := range builder.solution.ProjectMap {
 		// Check if is XamarinUITest project
-		if proj.ProjectType != constants.ProjectTypeXamarinUITest {
+		if proj.TestFramework != constants.TestFrameworkXamarinUITest {
 			continue
 		}
 
@@ -96,12 +96,12 @@ func (builder Model) buildableXamarinUITestProjectsAndReferredProjects(configura
 				continue
 			}
 
-			if referredProj.ProjectType == constants.ProjectTypeUnknown {
+			if referredProj.SDK == constants.SDKUnknown {
 				warnings = append(warnings, fmt.Sprintf("project's (%s) project type is unkown", referredProj.Name))
 				continue
 			}
 
-			if whitelistAllows(referredProj.ProjectType, builder.projectTypeWhitelist...) {
+			if whitelistAllows(referredProj.SDK, builder.projectTypeWhitelist...) {
 				referredProjects = append(referredProjects, referredProj)
 			}
 		}
@@ -126,7 +126,7 @@ func (builder Model) buildableNunitTestProjects(configuration, platform string) 
 
 	for _, proj := range builder.solution.ProjectMap {
 		// Check if is nunit test project
-		if proj.ProjectType != constants.ProjectTypeNunitTest {
+		if proj.TestFramework != constants.TestFrameworkNunitTest {
 			continue
 		}
 
