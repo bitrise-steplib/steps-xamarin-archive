@@ -160,12 +160,12 @@ func main() {
 	}
 
 	// parse project type filters
-	projectTypeWhitelist := []constants.ProjectType{}
+	projectTypeWhitelist := []constants.SDK{}
 	if len(configs.ProjectTypeWhitelist) > 0 {
 		split := strings.Split(configs.ProjectTypeWhitelist, ",")
 		for _, item := range split {
 			item := strings.TrimSpace(item)
-			projectType, err := constants.ParseProjectType(item)
+			projectType, err := constants.ParseSDK(item)
 			if err != nil {
 				log.Error("Failed to parse project type (%s), error: %s", item, err)
 				os.Exit(1)
@@ -176,12 +176,12 @@ func main() {
 	// ---
 
 	// prepare custom options
-	projectTypeCustomOptions := map[constants.ProjectType][]string{}
-	projectTypeRawCustomOptions := map[constants.ProjectType]string{
-		constants.ProjectTypeAndroid: configs.AndroidCustomOptions,
-		constants.ProjectTypeIOS:     configs.IOSCustomOptions,
-		constants.ProjectTypeTvOS:    configs.TvOSCustomOptions,
-		constants.ProjectTypeMacOS:   configs.MacOSCustomOptions,
+	projectTypeCustomOptions := map[constants.SDK][]string{}
+	projectTypeRawCustomOptions := map[constants.SDK]string{
+		constants.SDKAndroid: configs.AndroidCustomOptions,
+		constants.SDKIOS:     configs.IOSCustomOptions,
+		constants.SDKTvOS:    configs.TvOSCustomOptions,
+		constants.SDKMacOS:   configs.MacOSCustomOptions,
 	}
 	for projectType, rawOptions := range projectTypeRawCustomOptions {
 		if rawOptions == "" {
@@ -207,14 +207,14 @@ func main() {
 		os.Exit(1)
 	}
 
-	prepareCallback := func(solutionName string, projectName string, projectType constants.ProjectType, command *tools.Editable) {
-		options, ok := projectTypeCustomOptions[projectType]
+	prepareCallback := func(solutionName string, projectName string, sdk constants.SDK, testFramwork constants.TestFramework, command *tools.Editable) {
+		options, ok := projectTypeCustomOptions[sdk]
 		if ok {
 			(*command).SetCustomOptions(options...)
 		}
 	}
 
-	callback := func(solutionName string, projectName string, projectType constants.ProjectType, commandStr string, alreadyPerformed bool) {
+	callback := func(solutionName string, projectName string, sdk constants.SDK, testFramwork constants.TestFramework, commandStr string, alreadyPerformed bool) {
 		fmt.Println()
 		log.Info("Building project: %s", projectName)
 		log.Done("$ %s", commandStr)
@@ -253,7 +253,7 @@ func main() {
 
 		for _, output := range projectOutput.Outputs {
 			// Android outputs
-			if projectOutput.ProjectType == constants.ProjectTypeAndroid && output.OutputType == constants.OutputTypeAPK {
+			if projectOutput.ProjectType == constants.SDKAndroid && output.OutputType == constants.OutputTypeAPK {
 				envKey := "BITRISE_APK_PATH"
 				pth, err := exportArtifactFile(output.Pth, configs.DeployDir, envKey)
 				if err != nil {
@@ -264,7 +264,7 @@ func main() {
 			}
 
 			// IOS outputs
-			if projectOutput.ProjectType == constants.ProjectTypeIOS {
+			if projectOutput.ProjectType == constants.SDKIOS {
 				if output.OutputType == constants.OutputTypeXCArchive {
 					envKey := "BITRISE_XCARCHIVE_PATH"
 					pth, err := exportArtifactDir(output.Pth, configs.DeployDir, envKey)
@@ -297,7 +297,7 @@ func main() {
 			}
 
 			// TvOS outputs
-			if projectOutput.ProjectType == constants.ProjectTypeTvOS {
+			if projectOutput.ProjectType == constants.SDKTvOS {
 				if output.OutputType == constants.OutputTypeXCArchive {
 					envKey := "BITRISE_TVOS_XCARCHIVE_PATH"
 					pth, err := exportArtifactDir(output.Pth, configs.DeployDir, envKey)
@@ -330,7 +330,7 @@ func main() {
 			}
 
 			// MacOS outputs
-			if projectOutput.ProjectType == constants.ProjectTypeMacOS {
+			if projectOutput.ProjectType == constants.SDKMacOS {
 				if output.OutputType == constants.OutputTypeXCArchive {
 					envKey := "BITRISE_MACOS_XCARCHIVE_PATH"
 					pth, err := exportArtifactDir(output.Pth, configs.DeployDir, envKey)
