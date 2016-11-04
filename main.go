@@ -163,13 +163,19 @@ func main() {
 	projectTypeWhitelist := []constants.SDK{}
 	if len(configs.ProjectTypeWhitelist) > 0 {
 		split := strings.Split(configs.ProjectTypeWhitelist, ",")
+
 		for _, item := range split {
 			item := strings.TrimSpace(item)
+			if item == "" {
+				continue
+			}
+
 			projectType, err := constants.ParseSDK(item)
 			if err != nil {
 				log.Error("Failed to parse project type (%s), error: %s", item, err)
 				os.Exit(1)
 			}
+
 			projectTypeWhitelist = append(projectTypeWhitelist, projectType)
 		}
 	}
