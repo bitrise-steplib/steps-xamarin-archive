@@ -185,16 +185,9 @@ func analyzeTargetDefinition(project Model, pth string) (Model, error) {
 
 		// PropertyGroup with Condition (Configuration & Platform)
 		if matches := regexp.MustCompile(propertyGroupWithConditionConfigurationAndPlatformPattern).FindStringSubmatch(line); len(matches) == 3 {
-			platform := matches[2]
-			/*
-				if platform == "AnyCPU" {
-					platform = "Any CPU"
-				}
-			*/
-
 			configurationPlatform = ConfigurationPlatformModel{
 				Configuration: matches[1],
-				Platform:      platform,
+				Platform:      matches[2],
 			}
 
 			isPropertyGroupSection = true
@@ -213,15 +206,8 @@ func analyzeTargetDefinition(project Model, pth string) (Model, error) {
 
 		// PropertyGroup with Condition (Platform)
 		if matches := regexp.MustCompile(propertyGroupWithConditionPlatformPattern).FindStringSubmatch(line); len(matches) == 2 {
-			platform := matches[2]
-			/*
-				if platform == "AnyCPU" {
-					platform = "Any CPU"
-				}
-			*/
-
 			configurationPlatform = ConfigurationPlatformModel{
-				Platform: platform,
+				Platform: matches[1],
 			}
 
 			isPropertyGroupSection = true
@@ -250,14 +236,6 @@ func analyzeTargetDefinition(project Model, pth string) (Model, error) {
 				configurationPlatform.SignAndroid = true
 				continue
 			}
-
-			/*
-				// IpaPackageName
-				if match := regexp.MustCompile(ipaPackageNamePattern).FindString(line); match != "" {
-					configurationPlatform.IpaPackage = true
-					continue
-				}
-			*/
 
 			// BuildIpa ...
 			if match := regexp.MustCompile(buildIpaPattern).FindString(line); match != "" {
@@ -315,11 +293,6 @@ func analyzeTargetDefinition(project Model, pth string) (Model, error) {
 
 		// ProjectReference
 		if matches := regexp.MustCompile(projectRefernceStartPattern).FindStringSubmatch(line); len(matches) == 2 {
-			/*
-				projectRelativePth := fixWindowsPath(matches[1])
-				projectPth := filepath.Join(projectDir, projectRelativePth)
-			*/
-
 			isProjectReferenceSection = true
 			continue
 		}
