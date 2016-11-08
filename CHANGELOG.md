@@ -1,6 +1,12 @@
-## Changelog (Current version: 1.1.0)
+## Changelog (Current version: 1.1.1)
 
 -----------------
+
+### 1.1.1 (2016 Nov 08)
+
+* [e7e297d] prepare for 1.1.1
+* [3e9734e] Fix (#8)
+* [0e16e01] process only non empty sdk's (#7)
 
 ### 1.1.0 (2016 Nov 02)
 
@@ -172,4 +178,4 @@
 
 -----------------
 
-Updated: 2016 Nov 02
+Updated: 2016 Nov 08
