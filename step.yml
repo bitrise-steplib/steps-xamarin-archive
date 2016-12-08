@@ -44,7 +44,7 @@ inputs:
       is_required: true
   - project_type_whitelist: "android,ios,macos,tvos"
     opts:
-      title: Specify project tyes to build
+      title: Specify project types to build
       description: |-
         Comma separated list of project types to build.
 
