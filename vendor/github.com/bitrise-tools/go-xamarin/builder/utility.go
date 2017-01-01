@@ -202,8 +202,8 @@ func NewSortableArchivePth(pth string) (SortableArchivePth, error) {
 	archivePth.dirNameDate = dirNameDate
 
 	// File Date & Index
-	// XamarinSampleApp.iOS 10-07-16 3.41 PM 2.xcarchive
-	fileNameDateLayout := "01-02-06 3.04 PM"
+	// XamarinSampleApp.iOS 1-01-17 2.51 AM 2.xcarchive
+	fileNameDateLayout := "1-02-06 3.04 PM"
 	fileNamePattern := `.* (?P<date>[0-9-]+ [0-9.]+ [PM|AM]+)[ ]*(?P<count>|[0-9]+).xcarchive`
 	fileNameRegexp := regexp.MustCompile(fileNamePattern)
 
