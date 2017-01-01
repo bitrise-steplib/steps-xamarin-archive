@@ -1,6 +1,14 @@
-## Changelog (Current version: 1.1.1)
+## Changelog (Current version: 1.1.2)
 
 -----------------
+
+### 1.1.2 (2017 Jan 01)
+
+* [1d796cd] RELEASE_VERSION: 1.1.2
+* [cbca8f0] Merge pull request #10 from bitrise-steplib/feature/fix-attempt
+* [7f02cbe] date parse fix
+* [89eb2c0] golint fixes
+* [017f53d] Fix typo from tyes to types (#9)
 
 ### 1.1.1 (2016 Nov 08)
 
@@ -178,4 +186,4 @@
 
 -----------------
 
-Updated: 2016 Nov 08
+Updated: 2017 Jan 01
