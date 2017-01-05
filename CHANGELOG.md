@@ -1,6 +1,13 @@
-## Changelog (Current version: 1.1.2)
+## Changelog (Current version: 1.2.0)
 
 -----------------
+
+### 1.2.0 (2017 Jan 05)
+
+* [7350bce] prepare for 1.2.0
+* [1e8d0fa] Project type fix (#12)
+* [6a0515e] type tag fix
+* [2833098] README update - how to use
 
 ### 1.1.2 (2017 Jan 01)
 
@@ -186,4 +193,4 @@
 
 -----------------
 
-Updated: 2017 Jan 01
+Updated: 2017 Jan 05
