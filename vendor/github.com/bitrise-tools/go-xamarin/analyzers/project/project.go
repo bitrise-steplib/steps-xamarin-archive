@@ -266,14 +266,14 @@ func analyzeTargetDefinition(project Model, pth string) (Model, error) {
 		}
 
 		if match := regexp.MustCompile(referenceXamarinUITestPattern).FindString(line); match != "" {
-			if project.TestFramework == "" {
-				project.TestFramework = constants.TestFrameworkXamarinUITest
-			}
+			project.TestFramework = constants.TestFrameworkXamarinUITest
 			continue
 		}
 
 		if match := regexp.MustCompile(referenceNunitFramework).FindString(line); match != "" {
-			project.TestFramework = constants.TestFrameworkNunitTest
+			if project.TestFramework == constants.TestFrameworkUnknown {
+				project.TestFramework = constants.TestFrameworkNunitTest
+			}
 			continue
 		}
 

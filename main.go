@@ -50,24 +50,24 @@ func createConfigsModelFromEnvs() ConfigsModel {
 }
 
 func (configs ConfigsModel) print() {
-	log.Info("Configs:")
+	log.Infof("Configs:")
 
-	log.Detail("- XamarinSolution: %s", configs.XamarinSolution)
-	log.Detail("- XamarinConfiguration: %s", configs.XamarinConfiguration)
-	log.Detail("- XamarinPlatform: %s", configs.XamarinPlatform)
-	log.Detail("- ProjectTypeWhitelist: %s", configs.ProjectTypeWhitelist)
+	log.Printf("- XamarinSolution: %s", configs.XamarinSolution)
+	log.Printf("- XamarinConfiguration: %s", configs.XamarinConfiguration)
+	log.Printf("- XamarinPlatform: %s", configs.XamarinPlatform)
+	log.Printf("- ProjectTypeWhitelist: %s", configs.ProjectTypeWhitelist)
 
-	log.Info("Experimental Configs:")
+	log.Infof("Experimental Configs:")
 
-	log.Detail("- AndroidCustomOptions: %s", configs.AndroidCustomOptions)
-	log.Detail("- IOSCustomOptions: %s", configs.IOSCustomOptions)
-	log.Detail("- TvOSCustomOptions: %s", configs.TvOSCustomOptions)
-	log.Detail("- MacOSCustomOptions: %s", configs.MacOSCustomOptions)
-	log.Detail("- ForceMDTool: %s", configs.ForceMDTool)
+	log.Printf("- AndroidCustomOptions: %s", configs.AndroidCustomOptions)
+	log.Printf("- IOSCustomOptions: %s", configs.IOSCustomOptions)
+	log.Printf("- TvOSCustomOptions: %s", configs.TvOSCustomOptions)
+	log.Printf("- MacOSCustomOptions: %s", configs.MacOSCustomOptions)
+	log.Printf("- ForceMDTool: %s", configs.ForceMDTool)
 
-	log.Info("Other Configs:")
+	log.Infof("Other Configs:")
 
-	log.Detail("- DeployDir: %s", configs.DeployDir)
+	log.Printf("- DeployDir: %s", configs.DeployDir)
 }
 
 func (configs ConfigsModel) validate() error {
@@ -153,7 +153,7 @@ func main() {
 
 	if err := configs.validate(); err != nil {
 		fmt.Println()
-		log.Error("Issue with input: %s", err)
+		log.Errorf("Issue with input: %s", err)
 		fmt.Println()
 
 		os.Exit(1)
@@ -172,7 +172,7 @@ func main() {
 
 			projectType, err := constants.ParseSDK(item)
 			if err != nil {
-				log.Error("Failed to parse project type (%s), error: %s", item, err)
+				log.Errorf("Failed to parse project type (%s), error: %s", item, err)
 				os.Exit(1)
 			}
 
@@ -196,7 +196,7 @@ func main() {
 
 		split, err := shellquote.Split(rawOptions)
 		if err != nil {
-			log.Error("Failed to split options (%s), error: %s", err)
+			log.Errorf("failed to split options (%s), error: %s", rawOptions, err)
 		}
 		projectTypeCustomOptions[projectType] = split
 	}
@@ -205,11 +205,11 @@ func main() {
 	//
 	// build
 	fmt.Println()
-	log.Info("Building all projects in solution: %s", configs.XamarinSolution)
+	log.Infof("Building all projects in solution: %s", configs.XamarinSolution)
 
 	builder, err := builder.New(configs.XamarinSolution, projectTypeWhitelist, (configs.ForceMDTool == "yes"))
 	if err != nil {
-		log.Error("Failed to create xamarin builder, error: %s", err)
+		log.Errorf("Failed to create xamarin builder, error: %s", err)
 		os.Exit(1)
 	}
 
@@ -222,40 +222,40 @@ func main() {
 
 	callback := func(solutionName string, projectName string, sdk constants.SDK, testFramwork constants.TestFramework, commandStr string, alreadyPerformed bool) {
 		fmt.Println()
-		log.Info("Building project: %s", projectName)
-		log.Done("$ %s", commandStr)
+		log.Infof("Building project: %s", projectName)
+		log.Donef("$ %s", commandStr)
 		if alreadyPerformed {
-			log.Warn("build command already performed, skipping...")
+			log.Warnf("build command already performed, skipping...")
 		}
 		fmt.Println()
 	}
 
 	warnings, err := builder.BuildAllProjects(configs.XamarinConfiguration, configs.XamarinPlatform, prepareCallback, callback)
 	if len(warnings) > 0 {
-		log.Warn("Build warnings:")
+		log.Warnf("Build warnings:")
 		for _, warning := range warnings {
-			log.Warn(warning)
+			log.Warnf(warning)
 		}
 	}
 	if err != nil {
-		log.Error("Build failed, error: %s", err)
+		log.Errorf("Build failed, error: %s", err)
 		os.Exit(1)
 	}
 
 	output, err := builder.CollectProjectOutputs(configs.XamarinConfiguration, configs.XamarinPlatform)
 	if err != nil {
-		log.Error("Failed to collect output, error: %s", err)
+		log.Errorf("Failed to collect output, error: %s", err)
 		os.Exit(1)
 	}
 	// ---
 
 	// Export outputs
 	fmt.Println()
-	log.Info("Exporting generated outputs...")
+	log.Infof("Exporting generated outputs...")
 
 	for projectName, projectOutput := range output {
 		fmt.Println()
-		log.Info("%s outputs:", projectName)
+		log.Donef("%s outputs:", projectName)
 
 		for _, output := range projectOutput.Outputs {
 			// Android outputs
@@ -263,10 +263,11 @@ func main() {
 				envKey := "BITRISE_APK_PATH"
 				pth, err := exportArtifactFile(output.Pth, configs.DeployDir, envKey)
 				if err != nil {
-					log.Error("Failed to export apk, error: %s", err)
+					log.Errorf("Failed to export apk, error: %s", err)
 					os.Exit(1)
 				}
-				log.Done("apk path (%s) is available in (%s) environment variable", pth, envKey)
+				fmt.Println()
+				log.Printf("The apk path is now available in the Environment Variable: %s\nvalue: %s", envKey, pth)
 			}
 
 			// IOS outputs
@@ -275,30 +276,33 @@ func main() {
 					envKey := "BITRISE_XCARCHIVE_PATH"
 					pth, err := exportArtifactDir(output.Pth, configs.DeployDir, envKey)
 					if err != nil {
-						log.Error("Failed to export xcarchive, error: %s", err)
+						log.Errorf("Failed to export xcarchive, error: %s", err)
 						os.Exit(1)
 					}
-					log.Done("xcarchive path (%s) is available in (%s) environment variable", pth, envKey)
+					fmt.Println()
+					log.Printf("The xcarchive path is now available in the Environment Variable: %s\nvalue: %s", envKey, pth)
 				}
 
 				if output.OutputType == constants.OutputTypeIPA {
 					envKey := "BITRISE_IPA_PATH"
 					pth, err := exportArtifactFile(output.Pth, configs.DeployDir, envKey)
 					if err != nil {
-						log.Error("Failed to export ipa, error: %s", err)
+						log.Errorf("Failed to export ipa, error: %s", err)
 						os.Exit(1)
 					}
-					log.Done("ipa path (%s) is available in (%s) environment variable", pth, envKey)
+					fmt.Println()
+					log.Printf("The ipa path is now available in the Environment Variable: %s\nvalue: %s", envKey, pth)
 				}
 
 				if output.OutputType == constants.OutputTypeDSYM {
 					envKey := "BITRISE_DSYM_PATH"
 					pth, err := exportZipedArtifactDir(output.Pth, configs.DeployDir, envKey)
 					if err != nil {
-						log.Error("Failed to export dsym, error: %s", err)
+						log.Errorf("Failed to export dsym, error: %s", err)
 						os.Exit(1)
 					}
-					log.Done("dsym path (%s) is available in (%s) environment variable", pth, envKey)
+					fmt.Println()
+					log.Printf("The dsym zip path is now available in the Environment Variable: %s\nvalue: %s", envKey, pth)
 				}
 			}
 
@@ -308,30 +312,33 @@ func main() {
 					envKey := "BITRISE_TVOS_XCARCHIVE_PATH"
 					pth, err := exportArtifactDir(output.Pth, configs.DeployDir, envKey)
 					if err != nil {
-						log.Error("Failed to export xcarchive, error: %s", err)
+						log.Errorf("Failed to export xcarchive, error: %s", err)
 						os.Exit(1)
 					}
-					log.Done("xcarchive path (%s) is available in (%s) environment variable", pth, envKey)
+					fmt.Println()
+					log.Printf("The xcarchive path is now available in the Environment Variable: %s\nvalue: %s", envKey, pth)
 				}
 
 				if output.OutputType == constants.OutputTypeIPA {
 					envKey := "BITRISE_TVOS_IPA_PATH"
 					pth, err := exportArtifactFile(output.Pth, configs.DeployDir, envKey)
 					if err != nil {
-						log.Error("Failed to export ipa, error: %s", err)
+						log.Errorf("Failed to export ipa, error: %s", err)
 						os.Exit(1)
 					}
-					log.Done("ipa path (%s) is available in (%s) environment variable", pth, envKey)
+					fmt.Println()
+					log.Printf("The ipa path is now available in the Environment Variable: %s\nvalue: %s", envKey, pth)
 				}
 
 				if output.OutputType == constants.OutputTypeDSYM {
 					envKey := "BITRISE_TVOS_DSYM_PATH"
 					pth, err := exportZipedArtifactDir(output.Pth, configs.DeployDir, envKey)
 					if err != nil {
-						log.Error("Failed to export dsym, error: %s", err)
+						log.Errorf("Failed to export dsym, error: %s", err)
 						os.Exit(1)
 					}
-					log.Done("dsym path (%s) is available in (%s) environment variable", pth, envKey)
+					fmt.Println()
+					log.Printf("The dsym zip path is now available in the Environment Variable: %s\nvalue: %s", envKey, pth)
 				}
 			}
 
@@ -341,30 +348,33 @@ func main() {
 					envKey := "BITRISE_MACOS_XCARCHIVE_PATH"
 					pth, err := exportArtifactDir(output.Pth, configs.DeployDir, envKey)
 					if err != nil {
-						log.Error("Failed to export xcarchive, error: %s", err)
+						log.Errorf("Failed to export xcarchive, error: %s", err)
 						os.Exit(1)
 					}
-					log.Done("xcarchive path (%s) is available in (%s) environment variable", pth, envKey)
+					fmt.Println()
+					log.Printf("The xcarchive path is now available in the Environment Variable: %s\nvalue: %s", envKey, pth)
 				}
 
 				if output.OutputType == constants.OutputTypeAPP {
 					envKey := "BITRISE_MACOS_APP_PATH"
 					pth, err := exportArtifactDir(output.Pth, configs.DeployDir, envKey)
 					if err != nil {
-						log.Error("Failed to export xcarchive, error: %s", err)
+						log.Errorf("Failed to export app, error: %s", err)
 						os.Exit(1)
 					}
-					log.Done("app path (%s) is available in (%s) environment variable", pth, envKey)
+					fmt.Println()
+					log.Printf("The app path is now available in the Environment Variable: %s\nvalue: %s", envKey, pth)
 				}
 
 				if output.OutputType == constants.OutputTypePKG {
 					envKey := "BITRISE_MACOS_PKG_PATH"
 					pth, err := exportArtifactFile(output.Pth, configs.DeployDir, envKey)
 					if err != nil {
-						log.Error("Failed to export pkg, error: %s", err)
+						log.Errorf("Failed to export pkg, error: %s", err)
 						os.Exit(1)
 					}
-					log.Done("pkg path (%s) is available in (%s) environment variable", pth, envKey)
+					fmt.Println()
+					log.Printf("The pkg path is now available in the Environment Variable: %s\nvalue: %s", envKey, pth)
 				}
 			}
 		}
