@@ -255,7 +255,7 @@ func main() {
 
 	for projectName, projectOutput := range output {
 		fmt.Println()
-		log.Infof("%s outputs:", projectName)
+		log.Donef("%s outputs:", projectName)
 
 		for _, output := range projectOutput.Outputs {
 			// Android outputs
@@ -266,7 +266,8 @@ func main() {
 					log.Errorf("Failed to export apk, error: %s", err)
 					os.Exit(1)
 				}
-				log.Donef("apk path (%s) is available in (%s) environment variable", pth, envKey)
+				fmt.Println()
+				log.Printf("The apk path is now available in the Environment Variable: %s\nvalue: %s", envKey, pth)
 			}
 
 			// IOS outputs
@@ -278,7 +279,8 @@ func main() {
 						log.Errorf("Failed to export xcarchive, error: %s", err)
 						os.Exit(1)
 					}
-					log.Donef("xcarchive path (%s) is available in (%s) environment variable", pth, envKey)
+					fmt.Println()
+					log.Printf("The xcarchive path is now available in the Environment Variable: %s\nvalue: %s", envKey, pth)
 				}
 
 				if output.OutputType == constants.OutputTypeIPA {
@@ -288,7 +290,8 @@ func main() {
 						log.Errorf("Failed to export ipa, error: %s", err)
 						os.Exit(1)
 					}
-					log.Donef("ipa path (%s) is available in (%s) environment variable", pth, envKey)
+					fmt.Println()
+					log.Printf("The ipa path is now available in the Environment Variable: %s\nvalue: %s", envKey, pth)
 				}
 
 				if output.OutputType == constants.OutputTypeDSYM {
@@ -298,7 +301,8 @@ func main() {
 						log.Errorf("Failed to export dsym, error: %s", err)
 						os.Exit(1)
 					}
-					log.Donef("dsym path (%s) is available in (%s) environment variable", pth, envKey)
+					fmt.Println()
+					log.Printf("The dsym zip path is now available in the Environment Variable: %s\nvalue: %s", envKey, pth)
 				}
 			}
 
@@ -311,7 +315,8 @@ func main() {
 						log.Errorf("Failed to export xcarchive, error: %s", err)
 						os.Exit(1)
 					}
-					log.Donef("xcarchive path (%s) is available in (%s) environment variable", pth, envKey)
+					fmt.Println()
+					log.Printf("The xcarchive path is now available in the Environment Variable: %s\nvalue: %s", envKey, pth)
 				}
 
 				if output.OutputType == constants.OutputTypeIPA {
@@ -321,7 +326,8 @@ func main() {
 						log.Errorf("Failed to export ipa, error: %s", err)
 						os.Exit(1)
 					}
-					log.Donef("ipa path (%s) is available in (%s) environment variable", pth, envKey)
+					fmt.Println()
+					log.Printf("The ipa path is now available in the Environment Variable: %s\nvalue: %s", envKey, pth)
 				}
 
 				if output.OutputType == constants.OutputTypeDSYM {
@@ -331,7 +337,8 @@ func main() {
 						log.Errorf("Failed to export dsym, error: %s", err)
 						os.Exit(1)
 					}
-					log.Donef("dsym path (%s) is available in (%s) environment variable", pth, envKey)
+					fmt.Println()
+					log.Printf("The dsym zip path is now available in the Environment Variable: %s\nvalue: %s", envKey, pth)
 				}
 			}
 
@@ -344,17 +351,19 @@ func main() {
 						log.Errorf("Failed to export xcarchive, error: %s", err)
 						os.Exit(1)
 					}
-					log.Donef("xcarchive path (%s) is available in (%s) environment variable", pth, envKey)
+					fmt.Println()
+					log.Printf("The xcarchive path is now available in the Environment Variable: %s\nvalue: %s", envKey, pth)
 				}
 
 				if output.OutputType == constants.OutputTypeAPP {
 					envKey := "BITRISE_MACOS_APP_PATH"
 					pth, err := exportArtifactDir(output.Pth, configs.DeployDir, envKey)
 					if err != nil {
-						log.Errorf("Failed to export xcarchive, error: %s", err)
+						log.Errorf("Failed to export app, error: %s", err)
 						os.Exit(1)
 					}
-					log.Donef("app path (%s) is available in (%s) environment variable", pth, envKey)
+					fmt.Println()
+					log.Printf("The app path is now available in the Environment Variable: %s\nvalue: %s", envKey, pth)
 				}
 
 				if output.OutputType == constants.OutputTypePKG {
@@ -364,7 +373,8 @@ func main() {
 						log.Errorf("Failed to export pkg, error: %s", err)
 						os.Exit(1)
 					}
-					log.Donef("pkg path (%s) is available in (%s) environment variable", pth, envKey)
+					fmt.Println()
+					log.Printf("The pkg path is now available in the Environment Variable: %s\nvalue: %s", envKey, pth)
 				}
 			}
 		}
