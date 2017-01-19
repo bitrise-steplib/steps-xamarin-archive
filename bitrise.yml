@@ -10,12 +10,18 @@ app:
   - BITRISE_XAMARIN_CONFIGURATION: Release
   - BITRISE_XAMARIN_PLATFORM: iPhone
 
+  - ORIG_BITRISE_SOURCE_DIR: $BITRISE_SOURCE_DIR
+
 workflows:
   # ----------------------------------------------------------------
   # --- workflow to Step Test
   ci:
     before_run:
     - go-tests
+    after_run:
+    - test_ios
+    - test_android_custom_options
+    - test_macos_force_mdtool
     steps:
     - script:
         title: Cleanup _tmp dir
@@ -48,74 +54,74 @@ workflows:
         title: Xamarin login
     - nuget-restore:
         title: Nuget restore
+
+  test_ios:
+    after_run:
+    - print_outputs
+    steps:
     - path::./:
         title: Step test - ios
         inputs:
         - project_type_whitelist: ios
-    - script:
-        title: Output test
-        is_always_run: true
-        inputs:
-        - content: |-
-            echo "BITRISE_XCARCHIVE_PATH: $BITRISE_XCARCHIVE_PATH"
-            echo "BITRISE_IPA_PATH: $BITRISE_IPA_PATH"
-            echo "BITRISE_DSYM_PATH: $BITRISE_DSYM_PATH"
-            echo
-            echo "BITRISE_APK_PATH: $BITRISE_APK_PATH"
-            echo
-            echo "BITRISE_TVOS_XCARCHIVE_PATH: $BITRISE_TVOS_XCARCHIVE_PATH"
-            echo "BITRISE_TVOS_IPA_PATH: $BITRISE_TVOS_IPA_PATH"
-            echo "BITRISE_TVOS_DSYM_PATH: $BITRISE_TVOS_DSYM_PATH"
-            echo
-            echo "BITRISE_MACOS_XCARCHIVE_PATH: $BITRISE_MACOS_XCARCHIVE_PATH"
-            echo "BITRISE_MACOS_APP_PATH: $BITRISE_MACOS_APP_PATH"
-            echo "BITRISE_MACOS_PKG_PATH: $BITRISE_MACOS_PKG_PATH"
+
+  test_android_custom_options:
+    after_run:
+    - print_outputs
+    steps:
     - path::./:
-        title: Step test - ios custom options
+        title: Step test - android custom options
         inputs:
-        - project_type_whitelist: ios
+        - project_type_whitelist: android
         - ios_build_command_custom_options: /nologo
-    - script:
-        title: Output test
-        is_always_run: true
-        inputs:
-        - content: |-
-            echo "BITRISE_XCARCHIVE_PATH: $BITRISE_XCARCHIVE_PATH"
-            echo "BITRISE_IPA_PATH: $BITRISE_IPA_PATH"
-            echo "BITRISE_DSYM_PATH: $BITRISE_DSYM_PATH"
-            echo
-            echo "BITRISE_APK_PATH: $BITRISE_APK_PATH"
-            echo
-            echo "BITRISE_TVOS_XCARCHIVE_PATH: $BITRISE_TVOS_XCARCHIVE_PATH"
-            echo "BITRISE_TVOS_IPA_PATH: $BITRISE_TVOS_IPA_PATH"
-            echo "BITRISE_TVOS_DSYM_PATH: $BITRISE_TVOS_DSYM_PATH"
-            echo
-            echo "BITRISE_MACOS_XCARCHIVE_PATH: $BITRISE_MACOS_XCARCHIVE_PATH"
-            echo "BITRISE_MACOS_APP_PATH: $BITRISE_MACOS_APP_PATH"
-            echo "BITRISE_MACOS_PKG_PATH: $BITRISE_MACOS_PKG_PATH"
+
+  test_macos_force_mdtool:
+    after_run:
+    - print_outputs
+    steps:
     - path::./:
         title: Step test - macos force mdtool
         inputs:
         - force_mdtool: "yes"
         - project_type_whitelist: macos
+
+  print_outputs:
+    steps:
     - script:
         title: Output test
         is_always_run: true
         inputs:
         - content: |-
+            echo "BITRISE_APK_PATH: $BITRISE_APK_PATH"
+            echo
             echo "BITRISE_XCARCHIVE_PATH: $BITRISE_XCARCHIVE_PATH"
             echo "BITRISE_IPA_PATH: $BITRISE_IPA_PATH"
             echo "BITRISE_DSYM_PATH: $BITRISE_DSYM_PATH"
-            echo
-            echo "BITRISE_APK_PATH: $BITRISE_APK_PATH"
+            echo "BITRISE_APP_PATH: $BITRISE_APP_PATH"
             echo
             echo "BITRISE_TVOS_XCARCHIVE_PATH: $BITRISE_TVOS_XCARCHIVE_PATH"
             echo "BITRISE_TVOS_IPA_PATH: $BITRISE_TVOS_IPA_PATH"
             echo "BITRISE_TVOS_DSYM_PATH: $BITRISE_TVOS_DSYM_PATH"
+            echo "BITRISE_TVOS_APP_PATH: $BITRISE_TVOS_APP_PATH"
             echo
             echo "BITRISE_MACOS_XCARCHIVE_PATH: $BITRISE_MACOS_XCARCHIVE_PATH"
             echo "BITRISE_MACOS_APP_PATH: $BITRISE_MACOS_APP_PATH"
             echo "BITRISE_MACOS_PKG_PATH: $BITRISE_MACOS_PKG_PATH"
+
+            envman add --key BITRISE_APK_PATH --value ""
+
+            envman add --key BITRISE_XCARCHIVE_PATH --value ""
+            envman add --key BITRISE_IPA_PATH --value ""
+            envman add --key BITRISE_DSYM_PATH --value ""
+            envman add --key BITRISE_APP_PATH --value ""
+
+            envman add --key BITRISE_TVOS_XCARCHIVE_PATH --value ""
+            envman add --key BITRISE_TVOS_IPA_PATH --value ""
+            envman add --key BITRISE_TVOS_DSYM_PATH --value ""
+            envman add --key BITRISE_TVOS_APP_PATH --value ""
+
+            envman add --key BITRISE_MACOS_XCARCHIVE_PATH --value ""
+            envman add --key BITRISE_MACOS_APP_PATH --value ""
+            envman add --key BITRISE_MACOS_PKG_PATH --value ""
 
   go-tests:
     before_run:

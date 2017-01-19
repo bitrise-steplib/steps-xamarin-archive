@@ -91,9 +91,11 @@ inputs:
       - "no"
       is_required: true
 outputs:
+  # Android output
   - BITRISE_APK_PATH: ""
     opts:
       title: The created android .apk file's path
+  # iOS outputs
   - BITRISE_XCARCHIVE_PATH: ""
     opts:
       title: The created iOS .xcarchive file's path
@@ -103,6 +105,10 @@ outputs:
   - BITRISE_DSYM_PATH:
     opts:
       title: The created iOS .dSYM.zip file's path
+  - BITRISE_APP_PATH:
+    opts:
+      title: The create iOS .app file's path
+  # tvOS outputs
   - BITRISE_TVOS_XCARCHIVE_PATH: ""
     opts:
       title: The created tvOS .xcarchive file's path
@@ -112,6 +118,10 @@ outputs:
   - BITRISE_TVOS_DSYM_PATH:
     opts:
       title: The created tvOS .dSYM file's path
+  - BITRISE_TVOS_APP_PATH:
+    opts:
+      title: The create iOS .app file's path
+  # macOS outputs
   - BITRISE_MACOS_XCARCHIVE_PATH: ""
     opts:
       title: The created macOS .xcarchive file's path
