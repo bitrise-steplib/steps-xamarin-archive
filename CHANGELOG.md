@@ -1,6 +1,11 @@
-## Changelog (Current version: 1.3.0)
+## Changelog (Current version: 1.3.1)
 
 -----------------
+
+### 1.3.1 (2017 Jan 19)
+
+* [84abb14] prepare for 1.3.1
+* [b525dc9] typo fix
 
 ### 1.3.0 (2017 Jan 19)
 
