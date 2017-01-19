@@ -10,8 +10,6 @@ app:
   - BITRISE_XAMARIN_CONFIGURATION: Release
   - BITRISE_XAMARIN_PLATFORM: iPhone
 
-  - ORIG_BITRISE_SOURCE_DIR: $BITRISE_SOURCE_DIR
-
 workflows:
   # ----------------------------------------------------------------
   # --- workflow to Step Test
