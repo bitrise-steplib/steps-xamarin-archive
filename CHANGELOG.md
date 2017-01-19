@@ -1,6 +1,11 @@
-## Changelog (Current version: 1.2.0)
+## Changelog (Current version: 1.3.0)
 
 -----------------
+
+### 1.3.0 (2017 Jan 19)
+
+* [1691874] prepare for 1.3.0
+* [105a16d] App outputs (#13)
 
 ### 1.2.0 (2017 Jan 05)
 
@@ -193,4 +198,4 @@
 
 -----------------
 
-Updated: 2017 Jan 05
+Updated: 2017 Jan 19
