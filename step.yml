@@ -120,7 +120,7 @@ outputs:
       title: The created tvOS .dSYM file's path
   - BITRISE_TVOS_APP_PATH:
     opts:
-      title: The create iOS .app file's path
+      title: The create tvOS .app file's path
   # macOS outputs
   - BITRISE_MACOS_XCARCHIVE_PATH: ""
     opts:
