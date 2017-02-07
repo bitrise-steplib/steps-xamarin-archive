@@ -2,6 +2,7 @@ package builder
 
 import (
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -12,6 +13,7 @@ import (
 	"time"
 
 	"github.com/bitrise-io/go-utils/fileutil"
+	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-tools/go-xamarin/analyzers/solution"
 	"github.com/bitrise-tools/go-xamarin/constants"
@@ -362,6 +364,8 @@ func NewSortableIPAPth(pth string) (SortableIPAPth, error) {
 		} else {
 			ipaPth.dirNameIdx = 0
 		}
+	} else {
+		return SortableIPAPth{}, errors.New("Could not find sortable path string")
 	}
 
 	return ipaPth, nil
@@ -400,11 +404,21 @@ func (d ByIpaDate) Less(i, j int) bool {
 
 func exportLatestIpa(outputDir, assemblyName string) (string, error) {
 	// Multiplatform/iOS/bin/iPhone/Release/Multiplatform.iOS 2016-10-06 11-45-23/Multiplatform.iOS.ipa
-	pattern := filepath.Join(outputDir, "*", "*.ipa")
-	ipas, err := filepath.Glob(pattern)
+
+	patternInSubdir := filepath.Join(outputDir, "*", "*.ipa")
+	ipas, err := filepath.Glob(patternInSubdir)
 	if err != nil {
-		return "", fmt.Errorf("failed to find ipa with pattern (%s), error: %s", pattern, err)
+		return "", fmt.Errorf("failed to find ipa with pattern (%s), error: %s", patternInSubdir, err)
 	}
+
+	patternInOutputDir := filepath.Join(outputDir, "*.ipa")
+	ipasInOutputDir, err := filepath.Glob(patternInOutputDir)
+	if err != nil {
+		return "", fmt.Errorf("failed to find ipa with pattern (%s) in upper path, error: %s", patternInOutputDir, err)
+	}
+
+	ipas = append(ipas, ipasInOutputDir...)
+
 	if len(ipas) == 0 {
 		return "", nil
 	}
@@ -412,9 +426,14 @@ func exportLatestIpa(outputDir, assemblyName string) (string, error) {
 	rePattern := fmt.Sprintf("%s .*/%s.ipa", assemblyName, assemblyName)
 	re := regexp.MustCompile(rePattern)
 
+	rePatternInOutputDir := fmt.Sprintf("%s.ipa", assemblyName)
+	reInOutputDir := regexp.MustCompile(rePatternInOutputDir)
+
 	filteredIpas := []string{}
 	for _, ipa := range ipas {
 		if match := re.FindString(ipa); match != "" {
+			filteredIpas = append(filteredIpas, ipa)
+		} else if match := reInOutputDir.FindString(ipa); match != "" {
 			filteredIpas = append(filteredIpas, ipa)
 		}
 	}
@@ -427,24 +446,44 @@ func exportLatestIpa(outputDir, assemblyName string) (string, error) {
 		return "", nil
 	}
 
-	sortableIpaPths := []SortableIPAPth{}
+	hasDate := 0
+
 	for _, pth := range filteredIpas {
-		ipaPth, err := NewSortableIPAPth(pth)
-		if err != nil {
-			return "", err
+		if filepath.Dir(pth) != outputDir {
+			hasDate++
+		}
+	}
+
+	if hasDate == 0 {
+		//has no any timestamped path
+		return filteredIpas[0], nil
+	} else if hasDate == len(filteredIpas) {
+		//all path timestamped
+		sortableIpaPths := []SortableIPAPth{}
+		for _, pth := range filteredIpas {
+			ipaPth, err := NewSortableIPAPth(pth)
+			if err != nil {
+				return "", err
+			}
+
+			sortableIpaPths = append(sortableIpaPths, ipaPth)
 		}
 
-		sortableIpaPths = append(sortableIpaPths, ipaPth)
+		sort.Sort(ByIpaDate(sortableIpaPths))
+
+		sortedIPAPths := []string{}
+		for _, ipaPth := range sortableIpaPths {
+			sortedIPAPths = append(sortedIPAPths, ipaPth.pth)
+		}
+
+		return sortedIPAPths[0], nil
+	} else {
+		//paths are mixed, warn user
+		log.Warnf("Multiple path found: %v", filteredIpas)
+		log.Warnf("USED: %s", filteredIpas[0])
+		return filteredIpas[0], nil
 	}
 
-	sort.Sort(ByIpaDate(sortableIpaPths))
-
-	sortedIPAPths := []string{}
-	for _, ipaPth := range sortableIpaPths {
-		sortedIPAPths = append(sortedIPAPths, ipaPth.pth)
-	}
-
-	return sortedIPAPths[0], nil
 }
 
 func exportAppDSYM(outputDir, assemblyName string) (string, error) {
