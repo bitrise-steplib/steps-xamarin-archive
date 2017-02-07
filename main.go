@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/bitrise-io/go-utils/cmdex"
+	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-tools/go-xamarin/builder"
@@ -92,7 +92,7 @@ func (configs ConfigsModel) validate() error {
 }
 
 func exportEnvironmentWithEnvman(keyStr, valueStr string) error {
-	cmd := cmdex.NewCommand("envman", "add", "--key", keyStr)
+	cmd := command.New("envman", "add", "--key", keyStr)
 	cmd.SetStdin(strings.NewReader(valueStr))
 	return cmd.Run()
 }
@@ -101,7 +101,7 @@ func exportZipedArtifactDir(pth, deployDir, envKey string) (string, error) {
 	parentDir := filepath.Dir(pth)
 	dirName := filepath.Base(pth)
 	deployPth := filepath.Join(deployDir, dirName+".zip")
-	cmd := cmdex.NewCommand("/usr/bin/zip", "-rTy", deployPth, dirName)
+	cmd := command.New("/usr/bin/zip", "-rTy", deployPth, dirName)
 	cmd.SetDir(parentDir)
 	out, err := cmd.RunAndReturnTrimmedCombinedOutput()
 	if err != nil {
@@ -119,7 +119,7 @@ func exportArtifactDir(pth, deployDir, envKey string) (string, error) {
 	base := filepath.Base(pth)
 	deployPth := filepath.Join(deployDir, base)
 
-	if err := cmdex.CopyDir(pth, deployDir, false); err != nil {
+	if err := command.CopyDir(pth, deployDir, false); err != nil {
 		return "", fmt.Errorf("Failed to move artifact (%s) to (%s)", pth, deployDir)
 	}
 
@@ -134,7 +134,7 @@ func exportArtifactFile(pth, deployDir, envKey string) (string, error) {
 	base := filepath.Base(pth)
 	deployPth := filepath.Join(deployDir, base)
 
-	if err := cmdex.CopyFile(pth, deployPth); err != nil {
+	if err := command.CopyFile(pth, deployPth); err != nil {
 		return "", fmt.Errorf("Failed to move artifact (%s) to (%s)", pth, deployPth)
 	}
 
