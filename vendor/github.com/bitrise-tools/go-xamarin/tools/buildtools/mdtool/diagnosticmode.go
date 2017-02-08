@@ -7,11 +7,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/bitrise-io/go-utils/cmdex"
+	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/log"
 )
 
-func runCommandInDiagnosticMode(command cmdex.CommandModel, checkPattern string, waitTime time.Duration, forceWaitTime time.Duration, retryOnHang bool) error {
+func runCommandInDiagnosticMode(command command.Model, checkPattern string, waitTime time.Duration, forceWaitTime time.Duration, retryOnHang bool) error {
 	log.Warnf("Run in diagnostic mode")
 
 	// copy command model to avoid re-run error: Stdout already set

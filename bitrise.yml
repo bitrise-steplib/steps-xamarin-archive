@@ -61,6 +61,17 @@ workflows:
         title: Step test - ios
         inputs:
         - project_type_whitelist: ios
+    - script:
+        title: Check output Env. variables - iOS
+        inputs:
+        - content: |-
+            #!/bin/bash
+            set -e
+            set -v
+            if [[ ! -e $BITRISE_XCARCHIVE_PATH ]]; then exit 1; fi
+            if [[ ! -e $BITRISE_IPA_PATH ]]; then exit 1; fi
+            if [[ ! -e $BITRISE_DSYM_PATH ]]; then exit 1; fi
+            if [[ ! -e $BITRISE_APP_PATH ]]; then exit 1; fi
 
   test_android_custom_options:
     after_run:
@@ -71,6 +82,14 @@ workflows:
         inputs:
         - project_type_whitelist: android
         - ios_build_command_custom_options: /nologo
+    - script:
+        title: Check output Env. variables - Android
+        inputs:
+        - content: |-
+            #!/bin/bash
+            set -e
+            set -v
+            if [[ ! -e $BITRISE_APK_PATH ]]; then exit 1; fi
 
   test_macos_force_mdtool:
     after_run:
@@ -81,6 +100,16 @@ workflows:
         inputs:
         - force_mdtool: "yes"
         - project_type_whitelist: macos
+    - script:
+        title: Check output Env. variables - MacOS
+        inputs:
+        - content: |-
+            #!/bin/bash
+            set -e
+            set -v
+            if [[ ! -e $BITRISE_MACOS_XCARCHIVE_PATH ]]; then exit 1; fi
+            if [[ ! -e $BITRISE_MACOS_APP_PATH ]]; then exit 1; fi
+            if [[ ! -e $BITRISE_MACOS_PKG_PATH ]]; then exit 1; fi
 
   print_outputs:
     steps:
