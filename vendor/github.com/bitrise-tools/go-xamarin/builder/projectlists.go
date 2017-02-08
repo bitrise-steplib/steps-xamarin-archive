@@ -37,7 +37,7 @@ func (builder Model) buildableProjects(configuration, platform string) ([]projec
 		// Solution config - project config mapping
 		_, ok := proj.ConfigMap[solutionConfig]
 		if !ok {
-			warnings = append(warnings, fmt.Sprintf("project (%s) do not have config for solution config (%s), skipping...", proj.Name, solutionConfig))
+			warnings = append(warnings, fmt.Sprintf("Project (%s) do not have config for solution config (%s), skipping...", proj.Name, solutionConfig))
 			continue
 		}
 
@@ -45,7 +45,7 @@ func (builder Model) buildableProjects(configuration, platform string) ([]projec
 			proj.SDK == constants.SDKMacOS ||
 			proj.SDK == constants.SDKTvOS) &&
 			proj.OutputType != "exe" {
-			warnings = append(warnings, fmt.Sprintf("project (%s) does not archivable based on output type (%s), skipping...", proj.Name, proj.OutputType))
+			warnings = append(warnings, fmt.Sprintf("Project (%s) is not archivable based on output type (%s), skipping...", proj.Name, proj.OutputType))
 			continue
 		}
 		if proj.SDK == constants.SDKAndroid &&
@@ -79,25 +79,25 @@ func (builder Model) buildableXamarinUITestProjectsAndReferredProjects(configura
 		// Check if contains config mapping
 		_, ok := proj.ConfigMap[solutionConfig]
 		if !ok {
-			warnings = append(warnings, fmt.Sprintf("project (%s) do not have config for solution config (%s), skipping...", proj.Name, solutionConfig))
+			warnings = append(warnings, fmt.Sprintf("Project (%s) do not have config for solution config (%s), skipping...", proj.Name, solutionConfig))
 			continue
 		}
 
 		// Collect referred projects
 		if len(proj.ReferredProjectIDs) == 0 {
-			warnings = append(warnings, fmt.Sprintf("no referred projects found for test project: %s, skipping...", proj.Name))
+			warnings = append(warnings, fmt.Sprintf("No referred projects found for test project: %s, skipping...", proj.Name))
 			continue
 		}
 
 		for _, projectID := range proj.ReferredProjectIDs {
 			referredProj, ok := builder.solution.ProjectMap[projectID]
 			if !ok {
-				warnings = append(warnings, fmt.Sprintf("project reference exist with project id: %s, but project not found in solution", projectID))
+				warnings = append(warnings, fmt.Sprintf("Project reference exist with project id: %s, but project not found in solution", projectID))
 				continue
 			}
 
 			if referredProj.SDK == constants.SDKUnknown {
-				warnings = append(warnings, fmt.Sprintf("project's (%s) project type is unkown", referredProj.Name))
+				warnings = append(warnings, fmt.Sprintf("Project's (%s) project type is unkown", referredProj.Name))
 				continue
 			}
 
@@ -107,7 +107,7 @@ func (builder Model) buildableXamarinUITestProjectsAndReferredProjects(configura
 		}
 
 		if len(referredProjects) == 0 {
-			warnings = append(warnings, fmt.Sprintf("test project (%s) does not refers to any project, with project type whitelist (%v), skipping...", proj.Name, builder.projectTypeWhitelist))
+			warnings = append(warnings, fmt.Sprintf("Test project (%s) does not refers to any project, with project type whitelist (%v), skipping...", proj.Name, builder.projectTypeWhitelist))
 			continue
 		}
 
@@ -133,7 +133,7 @@ func (builder Model) buildableNunitTestProjects(configuration, platform string) 
 		// Check if contains config mapping
 		_, ok := proj.ConfigMap[solutionConfig]
 		if !ok {
-			warnings = append(warnings, fmt.Sprintf("project (%s) do not have config for solution config (%s), skipping...", proj.Name, solutionConfig))
+			warnings = append(warnings, fmt.Sprintf("Project (%s) do not have config for solution config (%s), skipping...", proj.Name, solutionConfig))
 			continue
 		}
 
