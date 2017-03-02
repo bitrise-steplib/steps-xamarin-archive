@@ -1,4 +1,6 @@
 .bitrise.secrets.yml
 .idea/
 _tmp/
+.gows*
+
 
