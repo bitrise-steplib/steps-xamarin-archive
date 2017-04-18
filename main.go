@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/log"
@@ -230,6 +231,8 @@ func main() {
 		fmt.Println()
 	}
 
+	startTime := time.Now()
+
 	warnings, err := builder.BuildAllProjects(configs.XamarinConfiguration, configs.XamarinPlatform, prepareCallback, callback)
 	if len(warnings) > 0 {
 		log.Warnf("Build warnings:")
@@ -241,7 +244,9 @@ func main() {
 		failf("Build failed, error: %s", err)
 	}
 
-	output, err := builder.CollectProjectOutputs(configs.XamarinConfiguration, configs.XamarinPlatform)
+	endTime := time.Now()
+
+	output, err := builder.CollectProjectOutputs(configs.XamarinConfiguration, configs.XamarinPlatform, startTime, endTime)
 	if err != nil {
 		failf("Failed to collect output, error: %s", err)
 	}

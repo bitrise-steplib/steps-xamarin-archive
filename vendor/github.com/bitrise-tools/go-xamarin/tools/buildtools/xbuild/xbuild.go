@@ -130,7 +130,7 @@ func (xbuild Model) PrintableCommand() string {
 func (xbuild Model) Run() error {
 	cmdSlice := xbuild.buildCommandSlice()
 
-	command, err := command.NewFromSlice(cmdSlice...)
+	command, err := command.NewFromSlice(cmdSlice)
 	if err != nil {
 		return err
 	}

@@ -1,6 +1,6 @@
 {
 	"ImportPath": "github.com/bitrise-steplib/steps-xamarin-archive",
-	"GoVersion": "go1.8",
+	"GoVersion": "go1.7",
 	"GodepVersion": "v79",
 	"Packages": [
 		"./..."
@@ -8,72 +8,72 @@
 	"Deps": [
 		{
 			"ImportPath": "github.com/bitrise-io/go-utils/colorstring",
-			"Rev": "5863e947430502abe15cb53a93e955259728ff66"
+			"Rev": "c8163959178ae89a3829ce02e485eef6b2befd22"
 		},
 		{
 			"ImportPath": "github.com/bitrise-io/go-utils/command",
-			"Rev": "5863e947430502abe15cb53a93e955259728ff66"
+			"Rev": "c8163959178ae89a3829ce02e485eef6b2befd22"
 		},
 		{
 			"ImportPath": "github.com/bitrise-io/go-utils/errorutil",
-			"Rev": "5863e947430502abe15cb53a93e955259728ff66"
+			"Rev": "c8163959178ae89a3829ce02e485eef6b2befd22"
 		},
 		{
 			"ImportPath": "github.com/bitrise-io/go-utils/fileutil",
-			"Rev": "5863e947430502abe15cb53a93e955259728ff66"
+			"Rev": "c8163959178ae89a3829ce02e485eef6b2befd22"
 		},
 		{
 			"ImportPath": "github.com/bitrise-io/go-utils/log",
-			"Rev": "5863e947430502abe15cb53a93e955259728ff66"
+			"Rev": "c8163959178ae89a3829ce02e485eef6b2befd22"
 		},
 		{
 			"ImportPath": "github.com/bitrise-io/go-utils/pathutil",
-			"Rev": "5863e947430502abe15cb53a93e955259728ff66"
+			"Rev": "c8163959178ae89a3829ce02e485eef6b2befd22"
 		},
 		{
 			"ImportPath": "github.com/bitrise-tools/go-xamarin/analyzers/project",
-			"Comment": "1.2.0-8-g085d545",
-			"Rev": "085d5455a42b64764a668a0e6880d4f58313002c"
+			"Comment": "1.2.0-16-g64e4ee7",
+			"Rev": "64e4ee747ebac7e1338d10dcf92cd75caead6d3a"
 		},
 		{
 			"ImportPath": "github.com/bitrise-tools/go-xamarin/analyzers/solution",
-			"Comment": "1.2.0-8-g085d545",
-			"Rev": "085d5455a42b64764a668a0e6880d4f58313002c"
+			"Comment": "1.2.0-16-g64e4ee7",
+			"Rev": "64e4ee747ebac7e1338d10dcf92cd75caead6d3a"
 		},
 		{
 			"ImportPath": "github.com/bitrise-tools/go-xamarin/builder",
-			"Comment": "1.2.0-8-g085d545",
-			"Rev": "085d5455a42b64764a668a0e6880d4f58313002c"
+			"Comment": "1.2.0-16-g64e4ee7",
+			"Rev": "64e4ee747ebac7e1338d10dcf92cd75caead6d3a"
 		},
 		{
 			"ImportPath": "github.com/bitrise-tools/go-xamarin/constants",
-			"Comment": "1.2.0-8-g085d545",
-			"Rev": "085d5455a42b64764a668a0e6880d4f58313002c"
+			"Comment": "1.2.0-16-g64e4ee7",
+			"Rev": "64e4ee747ebac7e1338d10dcf92cd75caead6d3a"
 		},
 		{
 			"ImportPath": "github.com/bitrise-tools/go-xamarin/tools",
-			"Comment": "1.2.0-8-g085d545",
-			"Rev": "085d5455a42b64764a668a0e6880d4f58313002c"
+			"Comment": "1.2.0-16-g64e4ee7",
+			"Rev": "64e4ee747ebac7e1338d10dcf92cd75caead6d3a"
 		},
 		{
 			"ImportPath": "github.com/bitrise-tools/go-xamarin/tools/buildtools/mdtool",
-			"Comment": "1.2.0-8-g085d545",
-			"Rev": "085d5455a42b64764a668a0e6880d4f58313002c"
+			"Comment": "1.2.0-16-g64e4ee7",
+			"Rev": "64e4ee747ebac7e1338d10dcf92cd75caead6d3a"
 		},
 		{
 			"ImportPath": "github.com/bitrise-tools/go-xamarin/tools/buildtools/xbuild",
-			"Comment": "1.2.0-8-g085d545",
-			"Rev": "085d5455a42b64764a668a0e6880d4f58313002c"
+			"Comment": "1.2.0-16-g64e4ee7",
+			"Rev": "64e4ee747ebac7e1338d10dcf92cd75caead6d3a"
 		},
 		{
 			"ImportPath": "github.com/bitrise-tools/go-xamarin/tools/nunit",
-			"Comment": "1.2.0-8-g085d545",
-			"Rev": "085d5455a42b64764a668a0e6880d4f58313002c"
+			"Comment": "1.2.0-16-g64e4ee7",
+			"Rev": "64e4ee747ebac7e1338d10dcf92cd75caead6d3a"
 		},
 		{
 			"ImportPath": "github.com/bitrise-tools/go-xamarin/utility",
-			"Comment": "1.2.0-8-g085d545",
-			"Rev": "085d5455a42b64764a668a0e6880d4f58313002c"
+			"Comment": "1.2.0-16-g64e4ee7",
+			"Rev": "64e4ee747ebac7e1338d10dcf92cd75caead6d3a"
 		},
 		{
 			"ImportPath": "github.com/kballard/go-shellquote",
