@@ -1,6 +1,12 @@
-## Changelog (Current version: 1.3.2)
+## Changelog (Current version: 1.3.3)
 
 -----------------
+
+### 1.3.3 (2017 Apr 18)
+
+* [3bb0f17] Prepare for 1.3.3
+* [3582742] godeps-update (#18)
+* [add49d9] godeps-update (#17)
 
 ### 1.3.2 (2017 Feb 08)
 
@@ -208,4 +214,4 @@
 
 -----------------
 
-Updated: 2017 Feb 08
+Updated: 2017 Apr 18
