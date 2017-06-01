@@ -210,9 +210,9 @@ func main() {
 	fmt.Println()
 	log.Infof("Building all projects in solution: %s", configs.XamarinSolution)
 
-	buildTool := buildtools.Mdtool
-	if configs.BuildTool == "xbuild" {
-		buildTool = buildtools.Xbuild
+	buildTool := buildtools.Xbuild
+	if configs.BuildTool == "mdtool" {
+		buildTool = buildtools.Mdtool
 	} else if configs.BuildTool == "msbuild" {
 		buildTool = buildtools.Msbuild
 	}
