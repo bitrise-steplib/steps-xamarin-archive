@@ -1,6 +1,11 @@
-## Changelog (Current version: 1.3.3)
+## Changelog (Current version: 1.4.0)
 
 -----------------
+
+### 1.4.0 (2017 Jun 01)
+
+* [90dbf42] prepare for 1.4.0
+* [3f02257] godeps-update (#20)
 
 ### 1.3.3 (2017 Apr 18)
 
@@ -214,4 +219,4 @@
 
 -----------------
 
-Updated: 2017 Apr 18
+Updated: 2017 Jun 01
