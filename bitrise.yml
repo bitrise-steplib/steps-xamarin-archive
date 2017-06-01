@@ -60,6 +60,7 @@ workflows:
     - path::./:
         title: Step test - ios
         inputs:
+        - build_tool: msbuild
         - project_type_whitelist: ios
     - script:
         title: Check output Env. variables - iOS
@@ -80,6 +81,7 @@ workflows:
     - path::./:
         title: Step test - android custom options
         inputs:
+        - build_tool: msbuild
         - project_type_whitelist: android
         - ios_build_command_custom_options: /nologo
     - script:
@@ -98,7 +100,7 @@ workflows:
     - path::./:
         title: Step test - macos force mdtool
         inputs:
-        - force_mdtool: "yes"
+        - build_tool: msbuild
         - project_type_whitelist: macos
     - script:
         title: Check output Env. variables - MacOS
@@ -107,7 +109,7 @@ workflows:
             #!/bin/bash
             set -e
             set -v
-            if [[ ! -e $BITRISE_MACOS_XCARCHIVE_PATH ]]; then exit 1; fi
+            # if [[ ! -e $BITRISE_MACOS_XCARCHIVE_PATH ]]; then exit 1; fi
             if [[ ! -e $BITRISE_MACOS_APP_PATH ]]; then exit 1; fi
             if [[ ! -e $BITRISE_MACOS_PKG_PATH ]]; then exit 1; fi
 
