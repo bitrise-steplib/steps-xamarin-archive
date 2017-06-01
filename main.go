@@ -14,6 +14,7 @@ import (
 	"github.com/bitrise-tools/go-xamarin/builder"
 	"github.com/bitrise-tools/go-xamarin/constants"
 	"github.com/bitrise-tools/go-xamarin/tools"
+	"github.com/bitrise-tools/go-xamarin/tools/buildtools"
 	shellquote "github.com/kballard/go-shellquote"
 )
 
@@ -28,7 +29,7 @@ type ConfigsModel struct {
 	IOSCustomOptions     string
 	TvOSCustomOptions    string
 	MacOSCustomOptions   string
-	ForceMDTool          string
+	BuildTool            string
 
 	DeployDir string
 }
@@ -44,7 +45,7 @@ func createConfigsModelFromEnvs() ConfigsModel {
 		IOSCustomOptions:     os.Getenv("ios_build_command_custom_options"),
 		TvOSCustomOptions:    os.Getenv("tvos_build_command_custom_options"),
 		MacOSCustomOptions:   os.Getenv("macos_build_command_custom_options"),
-		ForceMDTool:          os.Getenv("force_mdtool"),
+		BuildTool:            os.Getenv("build_tool"),
 
 		DeployDir: os.Getenv("BITRISE_DEPLOY_DIR"),
 	}
@@ -64,7 +65,7 @@ func (configs ConfigsModel) print() {
 	log.Printf("- IOSCustomOptions: %s", configs.IOSCustomOptions)
 	log.Printf("- TvOSCustomOptions: %s", configs.TvOSCustomOptions)
 	log.Printf("- MacOSCustomOptions: %s", configs.MacOSCustomOptions)
-	log.Printf("- ForceMDTool: %s", configs.ForceMDTool)
+	log.Printf("- BuildTool: %s", configs.BuildTool)
 
 	log.Infof("Other Configs:")
 
@@ -209,7 +210,14 @@ func main() {
 	fmt.Println()
 	log.Infof("Building all projects in solution: %s", configs.XamarinSolution)
 
-	builder, err := builder.New(configs.XamarinSolution, projectTypeWhitelist, (configs.ForceMDTool == "yes"))
+	buildTool := buildtools.Mdtool
+	if configs.BuildTool == "xbuild" {
+		buildTool = buildtools.Xbuild
+	} else if configs.BuildTool == "msbuild" {
+		buildTool = buildtools.Msbuild
+	}
+
+	builder, err := builder.New(configs.XamarinSolution, projectTypeWhitelist, buildTool)
 	if err != nil {
 		failf("Failed to create xamarin builder, error: %s", err)
 	}

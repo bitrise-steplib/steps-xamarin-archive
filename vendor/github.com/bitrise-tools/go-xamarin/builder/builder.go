@@ -11,6 +11,7 @@ import (
 	"github.com/bitrise-tools/go-xamarin/analyzers/solution"
 	"github.com/bitrise-tools/go-xamarin/constants"
 	"github.com/bitrise-tools/go-xamarin/tools"
+	"github.com/bitrise-tools/go-xamarin/tools/buildtools"
 	"github.com/bitrise-tools/go-xamarin/tools/nunit"
 	"github.com/bitrise-tools/go-xamarin/utility"
 )
@@ -20,7 +21,7 @@ type Model struct {
 	solution solution.Model
 
 	projectTypeWhitelist []constants.SDK
-	forceMDTool          bool
+	buildTool            buildtools.BuildTool
 }
 
 // OutputModel ...
@@ -58,7 +59,7 @@ type BuildCommandCallback func(solutionName string, projectName string, sdk cons
 type ClearCommandCallback func(project project.Model, dir string)
 
 // New ...
-func New(solutionPth string, projectTypeWhitelist []constants.SDK, forceMDTool bool) (Model, error) {
+func New(solutionPth string, projectTypeWhitelist []constants.SDK, buildTool buildtools.BuildTool) (Model, error) {
 	if err := validateSolutionPth(solutionPth); err != nil {
 		return Model{}, err
 	}
@@ -76,7 +77,7 @@ func New(solutionPth string, projectTypeWhitelist []constants.SDK, forceMDTool b
 		solution: solution,
 
 		projectTypeWhitelist: projectTypeWhitelist,
-		forceMDTool:          forceMDTool,
+		buildTool:            buildTool,
 	}, nil
 }
 
@@ -444,7 +445,7 @@ func (builder Model) CollectProjectOutputs(configuration, platform string, start
 				})
 			}
 		case constants.SDKMacOS:
-			if builder.forceMDTool {
+			if builder.buildTool == buildtools.Mdtool {
 				if xcarchivePth, err := exportLatestXCArchiveFromXcodeArchives(proj.AssemblyName, startTime, endTime); err != nil {
 					return ProjectOutputMap{}, err
 				} else if xcarchivePth != "" {
