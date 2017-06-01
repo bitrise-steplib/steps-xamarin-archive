@@ -1,6 +1,11 @@
-## Changelog (Current version: 1.4.0)
+## Changelog (Current version: 1.4.1)
 
 -----------------
+
+### 1.4.1 (2017 Jun 01)
+
+* [b665268] prepare for 1.4.1
+* [11b1bee] deprecate force_mdtool input (#21)
 
 ### 1.4.0 (2017 Jun 01)
 
