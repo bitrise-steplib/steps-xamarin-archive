@@ -31,6 +31,14 @@
 			"Rev": "9c30a7825aa1064e423a0f1dba751fec990b07be"
 		},
 		{
+			"ImportPath": "github.com/bitrise-tools/go-steputils/input",
+			"Rev": "a848c9870ff7d745a8fb2a951e1c81fcb147b4ec"
+		},
+		{
+			"ImportPath": "github.com/bitrise-tools/go-steputils/tools",
+			"Rev": "a848c9870ff7d745a8fb2a951e1c81fcb147b4ec"
+		},
+		{
 			"ImportPath": "github.com/bitrise-tools/go-xamarin/analyzers/project",
 			"Comment": "1.2.0-13-g501da8a",
 			"Rev": "501da8a3be23545c276c7d28c355ca74381525cc"

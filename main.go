@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -10,7 +9,8 @@ import (
 
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/log"
-	"github.com/bitrise-io/go-utils/pathutil"
+	"github.com/bitrise-tools/go-steputils/input"
+	steputiltools "github.com/bitrise-tools/go-steputils/tools"
 	"github.com/bitrise-tools/go-xamarin/builder"
 	"github.com/bitrise-tools/go-xamarin/constants"
 	"github.com/bitrise-tools/go-xamarin/tools"
@@ -30,6 +30,7 @@ type ConfigsModel struct {
 	TvOSCustomOptions    string
 	MacOSCustomOptions   string
 	BuildTool            string
+	ForceMdtool          string
 
 	DeployDir string
 }
@@ -46,6 +47,7 @@ func createConfigsModelFromEnvs() ConfigsModel {
 		TvOSCustomOptions:    os.Getenv("tvos_build_command_custom_options"),
 		MacOSCustomOptions:   os.Getenv("macos_build_command_custom_options"),
 		BuildTool:            os.Getenv("build_tool"),
+		ForceMdtool:          os.Getenv("force_mdtool"),
 
 		DeployDir: os.Getenv("BITRISE_DEPLOY_DIR"),
 	}
@@ -70,33 +72,29 @@ func (configs ConfigsModel) print() {
 	log.Infof("Other Configs:")
 
 	log.Printf("- DeployDir: %s", configs.DeployDir)
+
+	log.Warnf("Deprecated Configs")
+	log.Printf("- ForceMdtool: %s", configs.ForceMdtool)
 }
 
 func (configs ConfigsModel) validate() error {
-	if configs.XamarinSolution == "" {
-		return errors.New("no XamarinSolution parameter specified")
-	}
-	if exist, err := pathutil.IsPathExists(configs.XamarinSolution); err != nil {
-		return fmt.Errorf("failed to check if XamarinSolution exist at: %s, error: %s", configs.XamarinSolution, err)
-	} else if !exist {
-		return fmt.Errorf("XamarinSolution not exist at: %s", configs.XamarinSolution)
+	if err := input.ValidateIfPathExists(configs.XamarinSolution); err != nil {
+		return fmt.Errorf("XamarinSolution - %s", err)
 	}
 
-	if configs.XamarinConfiguration == "" {
-		return errors.New("no XamarinConfiguration parameter specified")
+	if err := input.ValidateIfNotEmpty(configs.XamarinConfiguration); err != nil {
+		return fmt.Errorf("XamarinConfiguration - %s", err)
 	}
 
-	if configs.XamarinPlatform == "" {
-		return errors.New("no XamarinPlatform parameter specified")
+	if err := input.ValidateIfNotEmpty(configs.XamarinPlatform); err != nil {
+		return fmt.Errorf("XamarinPlatform - %s", err)
+	}
+
+	if err := input.ValidateWithOptions(configs.BuildTool, "msbuild", "xbuild", "mdtool"); err != nil {
+		return fmt.Errorf("BuildTool - %s", err)
 	}
 
 	return nil
-}
-
-func exportEnvironmentWithEnvman(keyStr, valueStr string) error {
-	cmd := command.New("envman", "add", "--key", keyStr)
-	cmd.SetStdin(strings.NewReader(valueStr))
-	return cmd.Run()
 }
 
 func exportZipedArtifactDir(pth, deployDir, envKey string) (string, error) {
@@ -110,7 +108,7 @@ func exportZipedArtifactDir(pth, deployDir, envKey string) (string, error) {
 		return "", fmt.Errorf("Failed to zip dir: %s, output: %s, error: %s", pth, out, err)
 	}
 
-	if err := exportEnvironmentWithEnvman(envKey, deployPth); err != nil {
+	if err := steputiltools.ExportEnvironmentWithEnvman(envKey, deployPth); err != nil {
 		return "", fmt.Errorf("Failed to export artifact path (%s) into (%s)", deployPth, envKey)
 	}
 
@@ -125,7 +123,7 @@ func exportArtifactDir(pth, deployDir, envKey string) (string, error) {
 		return "", fmt.Errorf("Failed to move artifact (%s) to (%s)", pth, deployDir)
 	}
 
-	if err := exportEnvironmentWithEnvman(envKey, deployPth); err != nil {
+	if err := steputiltools.ExportEnvironmentWithEnvman(envKey, deployPth); err != nil {
 		return "", fmt.Errorf("Failed to export artifact path (%s) into (%s)", deployPth, envKey)
 	}
 
@@ -140,7 +138,7 @@ func exportArtifactFile(pth, deployDir, envKey string) (string, error) {
 		return "", fmt.Errorf("Failed to move artifact (%s) to (%s)", pth, deployPth)
 	}
 
-	if err := exportEnvironmentWithEnvman(envKey, deployPth); err != nil {
+	if err := steputiltools.ExportEnvironmentWithEnvman(envKey, deployPth); err != nil {
 		return "", fmt.Errorf("Failed to export artifact path (%s) into (%s)", deployPth, envKey)
 	}
 
@@ -161,6 +159,11 @@ func main() {
 	if err := configs.validate(); err != nil {
 		fmt.Println()
 		failf("Issue with input: %s", err)
+	}
+
+	if configs.ForceMdtool == "yes" {
+		log.Warnf("force_mdtool is deprecated, use build_tool input to specify the build tool to use")
+		configs.BuildTool = "mdtool"
 	}
 
 	// parse project type filters
