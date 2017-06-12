@@ -26,24 +26,28 @@ toolkit:
 inputs:
   - xamarin_solution: $BITRISE_PROJECT_PATH
     opts:
+      category: Config
       title: Path to the Xamarin Solution file
       description: |-
         The Xamarin Solution file `.sln` path.
       is_required: true
   - xamarin_configuration: $BITRISE_XAMARIN_CONFIGURATION
     opts:
+      category: Config
       title: Xamarin solution configuration
       description: |-
         Xamarin solution configuration.
       is_required: true
   - xamarin_platform: $BITRISE_XAMARIN_PLATFORM
     opts:
+      category: Config
       title: Xamarin solution platform
       description: |-
         Xamarin solution platform.
       is_required: true
   - project_type_whitelist: "android,ios,macos,tvos"
     opts:
+      category: Config
       title: Specify project types to build
       description: |-
         Comma separated list of project types to build.
@@ -56,28 +60,9 @@ inputs:
         - ios
         - macos
         - tvos
-  - ios_build_command_custom_options:
-    opts:
-      title: (Experimental) Options to append to the iOS build command
-      description: |-
-        These options will be append to the end of the iOS build command.
-  - android_build_command_custom_options:
-    opts:
-      title: (Experimental) Options to append to the Android build command
-      description: |-
-        These options will be append to the end of the Android build command.
-  - tvos_build_command_custom_options:
-    opts:
-      title: (Experimental) Options to append to the tvOS build command
-      description: |-
-        These options will be append to the end of the tvOS build command.
-  - macos_build_command_custom_options:
-    opts:
-      title: (Experimental) Options to append to the macOS build command
-      description: |-
-        These options will be append to the end of the macOS build command.
   - build_tool: "xbuild"
     opts:
+      category: Debug
       title: (Experimental) Which tool to use for building?
       description: |-
         Which tool to use for building?
@@ -87,10 +72,11 @@ inputs:
       - mdtool
   - force_mdtool: "no"
     opts:
+      category: Debug
       title: (DEPRECATED) Force use mdtool for builds?
       description: |-
         DEPRECATED - Use `build_tool` to specify the build tool to use.
-        
+
         Force use mdtool for building iOS, tvOS and macOS projects?
 
         By default step will build __iOS__, __tvOS__ and __macOS__ projects with `xbuild` build tool.
@@ -101,6 +87,30 @@ inputs:
       - "yes"
       - "no"
       is_required: true
+  - ios_build_command_custom_options:
+    opts:
+      category: Debug
+      title: (Experimental) Options to append to the iOS build command
+      description: |-
+        These options will be append to the end of the iOS build command.
+  - android_build_command_custom_options:
+    opts:
+      category: Debug
+      title: (Experimental) Options to append to the Android build command
+      description: |-
+        These options will be append to the end of the Android build command.
+  - tvos_build_command_custom_options:
+    opts:
+      category: Debug
+      title: (Experimental) Options to append to the tvOS build command
+      description: |-
+        These options will be append to the end of the tvOS build command.
+  - macos_build_command_custom_options:
+    opts:
+      category: Debug
+      title: (Experimental) Options to append to the macOS build command
+      description: |-
+        These options will be append to the end of the macOS build command.
 outputs:
   # Android output
   - BITRISE_APK_PATH: ""
