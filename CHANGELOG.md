@@ -1,6 +1,11 @@
-## Changelog (Current version: 1.4.1)
+## Changelog (Current version: 1.4.2)
 
 -----------------
+
+### 1.4.2 (2017 Jun 12)
+
+* [f1c8686] prepare for 1.4.2
+* [3406d29] input grouping and reordering (#22)
 
 ### 1.4.1 (2017 Jun 01)
 
@@ -224,4 +229,4 @@
 
 -----------------
 
-Updated: 2017 Jun 01
+Updated: 2017 Jun 12
