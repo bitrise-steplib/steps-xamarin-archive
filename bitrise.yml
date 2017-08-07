@@ -19,7 +19,7 @@ workflows:
     after_run:
     - test_ios
     - test_android_custom_options
-    - test_macos_force_mdtool
+    - test_macos
     steps:
     - script:
         title: Cleanup _tmp dir
@@ -93,14 +93,13 @@ workflows:
             set -v
             if [[ ! -e $BITRISE_APK_PATH ]]; then exit 1; fi
 
-  test_macos_force_mdtool:
+  test_macos:
     after_run:
     - print_outputs
     steps:
     - path::./:
         title: Step test - macos force mdtool
         inputs:
-        - force_mdtool: "yes"
         - project_type_whitelist: macos
     - script:
         title: Check output Env. variables - MacOS
