@@ -30,7 +30,6 @@ type ConfigsModel struct {
 	TvOSCustomOptions    string
 	MacOSCustomOptions   string
 	BuildTool            string
-	ForceMdtool          string
 
 	DeployDir string
 }
@@ -47,7 +46,6 @@ func createConfigsModelFromEnvs() ConfigsModel {
 		TvOSCustomOptions:    os.Getenv("tvos_build_command_custom_options"),
 		MacOSCustomOptions:   os.Getenv("macos_build_command_custom_options"),
 		BuildTool:            os.Getenv("build_tool"),
-		ForceMdtool:          os.Getenv("force_mdtool"),
 
 		DeployDir: os.Getenv("BITRISE_DEPLOY_DIR"),
 	}
@@ -72,9 +70,6 @@ func (configs ConfigsModel) print() {
 	log.Infof("Other Configs:")
 
 	log.Printf("- DeployDir: %s", configs.DeployDir)
-
-	log.Warnf("Deprecated Configs")
-	log.Printf("- ForceMdtool: %s", configs.ForceMdtool)
 }
 
 func (configs ConfigsModel) validate() error {
@@ -159,11 +154,6 @@ func main() {
 	if err := configs.validate(); err != nil {
 		fmt.Println()
 		failf("Issue with input: %s", err)
-	}
-
-	if configs.ForceMdtool == "yes" {
-		log.Warnf("force_mdtool is deprecated, use build_tool input to specify the build tool to use")
-		configs.BuildTool = "mdtool"
 	}
 
 	// parse project type filters

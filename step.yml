@@ -60,55 +60,37 @@ inputs:
         - ios
         - macos
         - tvos
-  - build_tool: "xbuild"
+  - build_tool: "msbuild"
     opts:
       category: Debug
-      title: (Experimental) Which tool to use for building?
+      title: Which tool to use for building?
       description: |-
         Which tool to use for building?
       value_options:
       - xbuild
       - msbuild
-      - mdtool
-  - force_mdtool: "no"
-    opts:
-      category: Debug
-      title: (DEPRECATED) Force use mdtool for builds?
-      description: |-
-        DEPRECATED - Use `build_tool` to specify the build tool to use.
-
-        Force use mdtool for building iOS, tvOS and macOS projects?
-
-        By default step will build __iOS__, __tvOS__ and __macOS__ projects with `xbuild` build tool.
-        If you want to switch to use `mdtool`, set this input to `yes`.
-
-        _Android projects will build with `xbuild`._
-      value_options:
-      - "yes"
-      - "no"
-      is_required: true
   - ios_build_command_custom_options:
     opts:
       category: Debug
-      title: (Experimental) Options to append to the iOS build command
+      title: Options to append to the iOS build command
       description: |-
         These options will be append to the end of the iOS build command.
   - android_build_command_custom_options:
     opts:
       category: Debug
-      title: (Experimental) Options to append to the Android build command
+      title: Options to append to the Android build command
       description: |-
         These options will be append to the end of the Android build command.
   - tvos_build_command_custom_options:
     opts:
       category: Debug
-      title: (Experimental) Options to append to the tvOS build command
+      title: Options to append to the tvOS build command
       description: |-
         These options will be append to the end of the tvOS build command.
   - macos_build_command_custom_options:
     opts:
       category: Debug
-      title: (Experimental) Options to append to the macOS build command
+      title: Options to append to the macOS build command
       description: |-
         These options will be append to the end of the macOS build command.
 outputs:
