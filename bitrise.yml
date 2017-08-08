@@ -101,6 +101,7 @@ workflows:
         title: Step test - macos force mdtool
         inputs:
         - project_type_whitelist: macos
+        - xamarin_platform: Any CPU
     - script:
         title: Check output Env. variables - MacOS
         inputs:
@@ -108,7 +109,6 @@ workflows:
             #!/bin/bash
             set -e
             set -v
-            if [[ ! -e $BITRISE_MACOS_XCARCHIVE_PATH ]]; then exit 1; fi
             if [[ ! -e $BITRISE_MACOS_APP_PATH ]]; then exit 1; fi
             if [[ ! -e $BITRISE_MACOS_PKG_PATH ]]; then exit 1; fi
 
