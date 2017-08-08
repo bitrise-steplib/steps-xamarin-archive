@@ -67,8 +67,8 @@ inputs:
       description: |-
         Which tool to use for building?
       value_options:
-      - xbuild
       - msbuild
+      - xbuild
   - ios_build_command_custom_options:
     opts:
       category: Debug
