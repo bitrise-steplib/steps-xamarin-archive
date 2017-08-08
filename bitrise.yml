@@ -98,7 +98,7 @@ workflows:
     - print_outputs
     steps:
     - path::./:
-        title: Step test - macos force mdtool
+        title: Step test - macos
         inputs:
         - project_type_whitelist: macos
         - xamarin_platform: Any CPU

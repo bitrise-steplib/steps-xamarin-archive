@@ -85,7 +85,7 @@ func (configs ConfigsModel) validate() error {
 		return fmt.Errorf("XamarinPlatform - %s", err)
 	}
 
-	if err := input.ValidateWithOptions(configs.BuildTool, "msbuild", "xbuild", "mdtool"); err != nil {
+	if err := input.ValidateWithOptions(configs.BuildTool, "msbuild", "xbuild"); err != nil {
 		return fmt.Errorf("BuildTool - %s", err)
 	}
 
@@ -204,9 +204,7 @@ func main() {
 	log.Infof("Building all projects in solution: %s", configs.XamarinSolution)
 
 	buildTool := buildtools.Xbuild
-	if configs.BuildTool == "mdtool" {
-		buildTool = buildtools.Mdtool
-	} else if configs.BuildTool == "msbuild" {
+	if configs.BuildTool == "msbuild" {
 		buildTool = buildtools.Msbuild
 	}
 
