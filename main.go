@@ -30,7 +30,6 @@ type ConfigsModel struct {
 	TvOSCustomOptions    string
 	MacOSCustomOptions   string
 	BuildTool            string
-	ForceMdtool          string
 
 	DeployDir string
 }
@@ -47,7 +46,6 @@ func createConfigsModelFromEnvs() ConfigsModel {
 		TvOSCustomOptions:    os.Getenv("tvos_build_command_custom_options"),
 		MacOSCustomOptions:   os.Getenv("macos_build_command_custom_options"),
 		BuildTool:            os.Getenv("build_tool"),
-		ForceMdtool:          os.Getenv("force_mdtool"),
 
 		DeployDir: os.Getenv("BITRISE_DEPLOY_DIR"),
 	}
@@ -72,9 +70,6 @@ func (configs ConfigsModel) print() {
 	log.Infof("Other Configs:")
 
 	log.Printf("- DeployDir: %s", configs.DeployDir)
-
-	log.Warnf("Deprecated Configs")
-	log.Printf("- ForceMdtool: %s", configs.ForceMdtool)
 }
 
 func (configs ConfigsModel) validate() error {
@@ -90,7 +85,7 @@ func (configs ConfigsModel) validate() error {
 		return fmt.Errorf("XamarinPlatform - %s", err)
 	}
 
-	if err := input.ValidateWithOptions(configs.BuildTool, "msbuild", "xbuild", "mdtool"); err != nil {
+	if err := input.ValidateWithOptions(configs.BuildTool, "msbuild", "xbuild"); err != nil {
 		return fmt.Errorf("BuildTool - %s", err)
 	}
 
@@ -161,11 +156,6 @@ func main() {
 		failf("Issue with input: %s", err)
 	}
 
-	if configs.ForceMdtool == "yes" {
-		log.Warnf("force_mdtool is deprecated, use build_tool input to specify the build tool to use")
-		configs.BuildTool = "mdtool"
-	}
-
 	// parse project type filters
 	projectTypeWhitelist := []constants.SDK{}
 	if len(configs.ProjectTypeWhitelist) > 0 {
@@ -213,11 +203,9 @@ func main() {
 	fmt.Println()
 	log.Infof("Building all projects in solution: %s", configs.XamarinSolution)
 
-	buildTool := buildtools.Xbuild
-	if configs.BuildTool == "mdtool" {
-		buildTool = buildtools.Mdtool
-	} else if configs.BuildTool == "msbuild" {
-		buildTool = buildtools.Msbuild
+	buildTool := buildtools.Msbuild
+	if configs.BuildTool == "xbuild" {
+		buildTool = buildtools.Xbuild
 	}
 
 	builder, err := builder.New(configs.XamarinSolution, projectTypeWhitelist, buildTool)
