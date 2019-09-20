@@ -4,6 +4,9 @@ default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 app:
   envs:
   - SAMPLE_APP_URL: https://github.com/bitrise-io/sample-apps-xamarin-cross-platform.git
+  - BITRISE_PROJECT_PATH: Multiplatform.sln
+  - BITRISE_XAMARIN_CONFIGURATION: Release
+  - BITRISE_XAMARIN_PLATFORM: iPhone
 
 workflows:
   # ----------------------------------------------------------------
