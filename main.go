@@ -260,10 +260,12 @@ func main() {
 	log.Infof("Exporting generated outputs...")
 
 	for projectName, projectOutput := range output {
+		outputNumber := len(projectOutput.Outputs)
 		fmt.Println()
-		log.Donef("%s outputs:", projectName)
+		log.Donef("%s outputs (%d):", projectName, outputNumber)
 
-		for _, output := range projectOutput.Outputs {
+		for i, output := range projectOutput.Outputs {
+			log.Infof("%d/%d - %s - Type: %s", i+1, outputNumber, output.Pth, projectOutput.ProjectType)
 			// Android outputs
 			if projectOutput.ProjectType == constants.SDKAndroid && output.OutputType == constants.OutputTypeAPK {
 				envKey := "BITRISE_APK_PATH"
