@@ -3,10 +3,7 @@ default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 
 app:
   envs:
-  - SAMPLE_APP_URL: https://github.com/bitrise-samples/sample-apps-xamarin-cross-platform.git
-  - BITRISE_PROJECT_PATH: Multiplatform.sln
-  - BITRISE_XAMARIN_CONFIGURATION: Release
-  - BITRISE_XAMARIN_PLATFORM: iPhone
+  - SAMPLE_APP_URL: https://github.com/bitrise-io/sample-apps-xamarin-cross-platform.git
 
 workflows:
   # ----------------------------------------------------------------
@@ -38,6 +35,7 @@ workflows:
         - path: ./_tmp
         - is_create_path: true
     - script:
+        title: Git clone Xamarin iOS sample app
         inputs:
         - content: git clone $SAMPLE_APP_URL .
     - certificate-and-profile-installer:
@@ -50,7 +48,7 @@ workflows:
     - print_outputs
     steps:
     - path::./:
-        title: Step test - ios
+        title: Step test - iOS
         inputs:
         - build_tool: msbuild
         - project_type_whitelist: ios
@@ -71,7 +69,7 @@ workflows:
     - print_outputs
     steps:
     - path::./:
-        title: Step test - android custom options
+        title: Step test - Android custom options
         inputs:
         - project_type_whitelist: android
         - ios_build_command_custom_options: /nologo
@@ -89,7 +87,7 @@ workflows:
     - print_outputs
     steps:
     - path::./:
-        title: Step test - macos
+        title: Step test - MacOS
         inputs:
         - project_type_whitelist: macos
         - xamarin_platform: Any CPU
@@ -144,23 +142,6 @@ workflows:
 
   # ----------------------------------------------------------------
   # --- Utility workflows
-  godeps-update:
-    title: Godeps update
-    steps:
-    - script:
-        title: Dependency update
-        inputs:
-        - content: |
-            #!/bin/bash
-            set -ex
-            go get -u -v github.com/tools/godep
-
-            rm -rf ./Godeps
-            rm -rf ./vendor
-
-            go get -t -d ./...
-            godep save ./...
-
   # ----------------------------------------------------------------
   # --- workflow to Share this step into a Step Library
   audit-this-step:
