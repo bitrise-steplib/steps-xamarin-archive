@@ -23,6 +23,10 @@ workflows:
     - golint:
     - errcheck:
     - go-test:
+
+
+  _common:
+    steps:
     - script:
         title: Cleanup _tmp dir
         inputs:
@@ -47,6 +51,8 @@ workflows:
         title: Nuget restore
 
   test_ios:
+    before_run:
+      - _common
     after_run:
     - print_outputs
     steps:
@@ -68,6 +74,8 @@ workflows:
             if [[ ! -e $BITRISE_APP_PATH ]]; then exit 1; fi
 
   test_android_custom_options:
+    before_run:
+      - _common
     after_run:
     - print_outputs
     steps:
@@ -86,6 +94,8 @@ workflows:
             if [[ ! -e $BITRISE_APK_PATH ]]; then exit 1; fi
 
   test_macos:
+    before_run:
+      - _common
     after_run:
     - print_outputs
     steps:

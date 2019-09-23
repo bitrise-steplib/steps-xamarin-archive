@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-io/go-xamarin/analyzers/project"
 	"github.com/bitrise-io/go-xamarin/analyzers/solution"
@@ -429,6 +430,8 @@ func (builder Model) CollectProjectOutputs(configuration, platform string, start
 						Pth:        xcarchivePth,
 						OutputType: constants.OutputTypeXCArchive,
 					})
+				} else {
+					log.Infof("No xcarhive path added")
 				}
 
 				if ipaPth, err := exportIpa(projectConfig.OutputDir, proj.AssemblyName, startTime, endTime); err != nil {
