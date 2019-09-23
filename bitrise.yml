@@ -23,10 +23,20 @@ workflows:
     - golint:
     - errcheck:
     - go-test:
-
-
-  _common:
-    steps:
+    - script:
+        title: Cleanup _tmp dir
+        inputs:
+          - content: |-
+              #!/bin/bash
+              set -e
+              set -v
+              rm -rf ./_tmp
+    - change-workdir:
+        title: Switch working dir to _tmp
+        run_if: true
+        inputs:
+          - path: ./_tmp
+          - is_create_path: true
     - script:
         title: Cleanup _tmp dir
         inputs:
@@ -34,15 +44,9 @@ workflows:
             #!/bin/bash
             set -e
             set -v
-            rm -rf ./_tmp
-    - change-workdir:
-        title: Switch working dir to _tmp
-        run_if: true
-        inputs:
-        - path: ./_tmp
-        - is_create_path: true
+            rm -rf ./tmp
     - script:
-        title: Git clone Xamarin iOS sample app
+        title: Git clone Xamarin multi platform sample app
         inputs:
         - content: git clone $SAMPLE_APP_URL .
     - certificate-and-profile-installer:
@@ -51,11 +55,17 @@ workflows:
         title: Nuget restore
 
   test_ios:
-    before_run:
-      - _common
     after_run:
     - print_outputs
     steps:
+    - script:
+        title: Cleanup _tmp dir
+        inputs:
+        - content: |-
+            #!/bin/bash
+            set -e
+            set -v
+            rm -rf ./iOS/bin
     - path::./:
         title: Step test - iOS
         inputs:
@@ -74,8 +84,6 @@ workflows:
             if [[ ! -e $BITRISE_APP_PATH ]]; then exit 1; fi
 
   test_android_custom_options:
-    before_run:
-      - _common
     after_run:
     - print_outputs
     steps:
@@ -94,11 +102,17 @@ workflows:
             if [[ ! -e $BITRISE_APK_PATH ]]; then exit 1; fi
 
   test_macos:
-    before_run:
-      - _common
     after_run:
     - print_outputs
     steps:
+    - script:
+        title: Cleanup _tmp dir
+        inputs:
+        - content: |-
+            #!/bin/bash
+            set -e
+            set -v
+            rm -rf ./Mac/bin
     - path::./:
         title: Step test - MacOS
         inputs:
