@@ -58,14 +58,6 @@ workflows:
     after_run:
     - print_outputs
     steps:
-    - script:
-        title: Cleanup _tmp dir
-        inputs:
-        - content: |-
-            #!/bin/bash
-            set -e
-            set -v
-            rm -rf ./iOS/bin
     - path::./:
         title: Step test - iOS
         inputs:
@@ -105,14 +97,6 @@ workflows:
     after_run:
     - print_outputs
     steps:
-    - script:
-        title: Cleanup _tmp dir
-        inputs:
-        - content: |-
-            #!/bin/bash
-            set -e
-            set -v
-            rm -rf ./Mac/bin
     - path::./:
         title: Step test - MacOS
         inputs:

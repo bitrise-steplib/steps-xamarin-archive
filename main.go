@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -230,7 +231,10 @@ func main() {
 		fmt.Println()
 	}
 
-	startTime := time.Now()
+	startTime, err := getStartTime()
+	if err != nil {
+		failf("Failed to get start time, error: %s", err)
+	}
 
 	warnings, err := b.BuildAllProjects(configs.XamarinConfiguration, configs.XamarinPlatform, true, prepareCallback, callback)
 	if len(warnings) > 0 {
@@ -398,4 +402,14 @@ func main() {
 		}
 	}
 	// ---
+}
+
+// getStartTime gets the start time of the build.
+func getStartTime() (time.Time, error) {
+	startTimeString := os.Getenv("BITRISE_BUILD_TRIGGER_TIMESTAMP")
+	startTime, err := strconv.ParseInt(startTimeString, 10, 64)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("failed to parse build start value, error: %s", err)
+	}
+	return time.Unix(startTime, 0), nil
 }
