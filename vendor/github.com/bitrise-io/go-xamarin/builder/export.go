@@ -2,25 +2,25 @@ package builder
 
 import (
 	"fmt"
-	"github.com/bitrise-io/go-utils/log"
 	"os"
 	"path/filepath"
 	"regexp"
 	"time"
 
+	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
 )
 
 // ModTimesByPath ...
 type ModTimesByPath map[string]time.Time
 
-// findModTimesByPath walks through on the given directory and returns a ModTimesByPath for each file. Boolean 
+// findModTimesByPath walks through on the given directory and returns a ModTimesByPath for each file. Boolean
 // excludeDir indicates if it should check directories or not.
 func findModTimesByPath(dir string, excludeDir bool) (ModTimesByPath, error) {
 	modTimesByPath := ModTimesByPath{}
 
 	if walkErr := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-		log.Infof("Walking for path: %s, modtime %v", path, info.ModTime())
+		log.Debugf("Walking for path: %s, modtime %v", path, info.ModTime())
 		if err != nil {
 			return err
 		}
@@ -47,7 +47,7 @@ func isInTimeInterval(t, startTime, endTime time.Time) bool {
 }
 
 func filterModTimesByPathByTimeWindow(modTimesByPath ModTimesByPath, startTime, endTime time.Time) ModTimesByPath {
-	log.Infof("Start time: %v, End time: %v",startTime,endTime)
+	log.Debugf("Start time: %v, End time: %v", startTime, endTime)
 	if startTime.IsZero() || endTime.IsZero() || startTime.Equal(endTime) || startTime.After(endTime) {
 		return ModTimesByPath{}
 	}
@@ -57,9 +57,9 @@ func filterModTimesByPathByTimeWindow(modTimesByPath ModTimesByPath, startTime, 
 	for pth, modTime := range modTimesByPath {
 		if isInTimeInterval(modTime, startTime, endTime) {
 			filteredModTimesByPath[pth] = modTime
-			log.Infof("%s is in interval", pth)
+			log.Debugf("%s is in interval", pth)
 		} else {
-			log.Infof("%s is not in interval, filtering out", pth)
+			log.Debugf("%s is not in interval, filtering out", pth)
 		}
 	}
 
@@ -79,12 +79,11 @@ func findLastModifiedPathWithFileNameRegexps(modTimesByPath ModTimesByPath, rege
 
 	if len(regexps) > 0 {
 		for _, re := range regexps {
-			log.Infof("Checking match for regexp: %s", re)
+			log.Debugf("Checking match for regexp: %s", re)
 			for pth, modTime := range modTimesByPath {
-				log.Infof("Checking file at: %s", pth)
+				log.Debugf("Checking file at: %s mod time %s", pth, modTime)
 				fileName := filepath.Base(pth)
 				if re.MatchString(fileName) {
-					log.Infof("Checking mod time: %s. Last mod time: %s", modTime, lastModTime)
 					if modTime.After(lastModTime) {
 						lastModifiedPth = pth
 						lastModTime = modTime
@@ -116,7 +115,7 @@ func findLastModifiedPathWithFileNameRegexps(modTimesByPath ModTimesByPath, rege
 // for directories as well or not. Please note, that for example a .xcarchive file qualifies as a directory, so if you
 // want to find it, the boolean should be false.
 func findArtifact(dir string, startTime, endTime time.Time, excludeDirs bool, patterns ...string) (string, error) {
-	log.Infof("Searching at %s",dir)
+	log.Debugf("Searching at %s", dir)
 	regexps := make([]*regexp.Regexp, len(patterns))
 	for i, pattern := range patterns {
 		regexps[i] = regexp.MustCompile(pattern)
