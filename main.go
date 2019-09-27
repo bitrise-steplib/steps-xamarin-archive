@@ -231,10 +231,7 @@ func main() {
 		fmt.Println()
 	}
 
-	startTime, err := getStartTime()
-	if err != nil {
-		failf("Failed to get start time, error: %s", err)
-	}
+	startTime := time.Now()
 
 	warnings, err := b.BuildAllProjects(configs.XamarinConfiguration, configs.XamarinPlatform, true, prepareCallback, callback)
 	if len(warnings) > 0 {

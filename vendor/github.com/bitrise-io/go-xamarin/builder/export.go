@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/bitrise-io/go-utils/log"
@@ -17,7 +18,8 @@ type ModTimesByPath map[string]time.Time
 // findModTimesByPath walks through on the given directory and returns a ModTimesByPath for each file. Boolean
 // excludeDir indicates if it should check directories or not.
 func findModTimesByPath(dir string, excludeDir bool) (ModTimesByPath, error) {
-	modTimesByPath := ModTimesByPath{}
+	modTimesByPathAll := ModTimesByPath{}
+	modTimesByPathDirs := ModTimesByPath{}
 
 	if walkErr := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		log.Debugf("Walking for path: %s, modtime %v", path, info.ModTime())
@@ -27,16 +29,44 @@ func findModTimesByPath(dir string, excludeDir bool) (ModTimesByPath, error) {
 
 		if excludeDir && info.IsDir() {
 			return nil
+		} else if info.IsDir() {
+			modTimesByPathDirs[path] = info.ModTime()
+			return nil
 		}
 
-		modTimesByPath[path] = info.ModTime()
+		modTimesByPathAll[path] = info.ModTime()
 
 		return nil
 	}); walkErr != nil {
 		return ModTimesByPath{}, walkErr
 	}
 
-	return modTimesByPath, nil
+	return updateDirectoryModtimes(modTimesByPathAll, modTimesByPathDirs), nil
+}
+
+func updateDirectoryModtimes(modTimesByPathAll ModTimesByPath, modTimesByPathDirs ModTimesByPath) ModTimesByPath {
+	for dPath, dTime := range modTimesByPathDirs {
+		for fPath, fTime := range modTimesByPathAll {
+			if isSubPath(dPath, fPath) && dTime.Before(fTime) {
+				modTimesByPathDirs[dPath] = fTime
+			}
+		}
+	}
+	for k, v := range modTimesByPathDirs {
+		modTimesByPathAll[k] = v
+	}
+	return modTimesByPathAll
+}
+
+func isSubPath(base, target string) bool {
+	rel, err := filepath.Rel(base, target)
+	if err != nil {
+		return false
+	}
+	if strings.Contains(rel, "../") {
+		return false
+	}
+	return true
 }
 
 func isInTimeInterval(t, startTime, endTime time.Time) bool {
