@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
@@ -399,14 +398,4 @@ func main() {
 		}
 	}
 	// ---
-}
-
-// getStartTime gets the start time of the build.
-func getStartTime() (time.Time, error) {
-	startTimeString := os.Getenv("BITRISE_BUILD_TRIGGER_TIMESTAMP")
-	startTime, err := strconv.ParseInt(startTimeString, 10, 64)
-	if err != nil {
-		return time.Time{}, fmt.Errorf("failed to parse build start value, error: %s", err)
-	}
-	return time.Unix(startTime, 0), nil
 }
