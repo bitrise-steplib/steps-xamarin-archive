@@ -145,7 +145,8 @@ func findLastModifiedPathWithFileNameRegexps(modTimesByPath ModTimesByPath, rege
 // for directories as well or not. Please note, that for example a .xcarchive file qualifies as a directory, so if you
 // want to find it, the boolean should be false.
 func findArtifact(dir string, startTime, endTime time.Time, excludeDirs bool, patterns ...string) (string, error) {
-	log.Debugf("Searching at %s", dir)
+	log.Warnf("Searching %s | %v | %s", dir, excludeDirs, patterns)
+
 	regexps := make([]*regexp.Regexp, len(patterns))
 	for i, pattern := range patterns {
 		regexps[i] = regexp.MustCompile(pattern)
@@ -155,6 +156,8 @@ func findArtifact(dir string, startTime, endTime time.Time, excludeDirs bool, pa
 	if err != nil {
 		return "", err
 	}
+
+	log.Warnf("modTimesByPath: %s", modTimesByPath)
 
 	modTimesByPathByTimeWindow := filterModTimesByPathByTimeWindow(modTimesByPath, startTime, endTime)
 	return findLastModifiedPathWithFileNameRegexps(modTimesByPathByTimeWindow, regexps...), nil
@@ -219,6 +222,8 @@ func exportPKG(outputDir, assemblyName string, startTime, endTime time.Time) (st
 }
 
 func exportApp(outputDir, assemblyName string, startTime, endTime time.Time) (string, error) {
+	log.Warnf("exportin app: %s | %s | %v | %v", outputDir, assemblyName, startTime, endTime)
+
 	return findArtifact(outputDir, startTime, endTime, false,
 		fmt.Sprintf(`(?i).*%s.*\.app$`, assemblyName),
 		`(?i).*\.app$`,
