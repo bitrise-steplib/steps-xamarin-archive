@@ -97,6 +97,14 @@ workflows:
     after_run:
     - print_outputs
     steps:
+    - script:
+        title: Check output Env. variables - MacOS
+        inputs:
+        - content: |-
+            #!/bin/bash
+            set -e
+            set -v
+            rm -rf $BITRISE_MACOS_APP_PATH
     - path::./:
         title: Step test - MacOS
         inputs:
