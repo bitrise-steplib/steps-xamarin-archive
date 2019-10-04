@@ -11,7 +11,6 @@ import (
 	steputiltools "github.com/bitrise-io/go-steputils/tools"
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/log"
-	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-io/go-xamarin/builder"
 	"github.com/bitrise-io/go-xamarin/constants"
 	"github.com/bitrise-io/go-xamarin/tools"
@@ -232,7 +231,6 @@ func main() {
 	}
 
 	startTime := time.Now()
-	log.Warnf("Xamarin build start time: %v", startTime)
 
 	warnings, err := b.BuildAllProjects(configs.XamarinConfiguration, configs.XamarinPlatform, true, prepareCallback, callback)
 	if len(warnings) > 0 {
@@ -246,23 +244,6 @@ func main() {
 	}
 
 	endTime := time.Now()
-	log.Warnf("Xamarin build end time: %v", endTime)
-
-	// Debug searching for the missing .app file
-	appPth := filepath.Join(filepath.Dir(configs.XamarinSolution), "Mac/bin/Release/Multiplatform.Mac.app")
-	exist, err := pathutil.IsPathExists(appPth)
-	if err == nil {
-		log.Printf("app path: %s, exist: %v", appPth, exist)
-
-		if exist {
-			info, err := os.Stat(appPth)
-			if err == nil {
-				log.Printf("app modtime: %v", info.ModTime())
-			}
-		}
-	}
-
-	// Debug searching for the missing .app file
 
 	output, err := b.CollectProjectOutputs(configs.XamarinConfiguration, configs.XamarinPlatform, startTime, endTime)
 	if err != nil {
