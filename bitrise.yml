@@ -3,7 +3,7 @@ default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 
 app:
   envs:
-  - SAMPLE_APP_URL: https://github.com/bitrise-samples/sample-apps-xamarin-cross-platform.git
+  - SAMPLE_APP_URL: https://github.com/bitrise-io/sample-apps-xamarin-cross-platform.git
   - BITRISE_PROJECT_PATH: Multiplatform.sln
   - BITRISE_XAMARIN_CONFIGURATION: Release
   - BITRISE_XAMARIN_PLATFORM: iPhone
@@ -26,18 +26,18 @@ workflows:
     - script:
         title: Cleanup _tmp dir
         inputs:
-        - content: |-
-            #!/bin/bash
-            set -e
-            set -v
-            rm -rf ./_tmp
+          - content: |-
+              #!/bin/bash
+              set -ex
+              rm -rf ./_tmp
     - change-workdir:
         title: Switch working dir to _tmp
         run_if: true
         inputs:
-        - path: ./_tmp
-        - is_create_path: true
+          - path: ./_tmp
+          - is_create_path: true
     - script:
+        title: Git clone Xamarin multi platform sample app
         inputs:
         - content: git clone $SAMPLE_APP_URL .
     - certificate-and-profile-installer:
@@ -47,10 +47,11 @@ workflows:
 
   test_ios:
     after_run:
-    - print_outputs
+    - _print_outputs
+    - _cleanup_output_dir
     steps:
     - path::./:
-        title: Step test - ios
+        title: Step test - iOS
         inputs:
         - build_tool: msbuild
         - project_type_whitelist: ios
@@ -59,8 +60,7 @@ workflows:
         inputs:
         - content: |-
             #!/bin/bash
-            set -e
-            set -v
+            set -ex
             if [[ ! -e $BITRISE_XCARCHIVE_PATH ]]; then exit 1; fi
             if [[ ! -e $BITRISE_IPA_PATH ]]; then exit 1; fi
             if [[ ! -e $BITRISE_DSYM_PATH ]]; then exit 1; fi
@@ -68,10 +68,11 @@ workflows:
 
   test_android_custom_options:
     after_run:
-    - print_outputs
+    - _print_outputs
+    - _cleanup_output_dir
     steps:
     - path::./:
-        title: Step test - android custom options
+        title: Step test - Android custom options
         inputs:
         - project_type_whitelist: android
         - ios_build_command_custom_options: /nologo
@@ -80,16 +81,23 @@ workflows:
         inputs:
         - content: |-
             #!/bin/bash
-            set -e
-            set -v
+            set -ex
             if [[ ! -e $BITRISE_APK_PATH ]]; then exit 1; fi
 
   test_macos:
     after_run:
-    - print_outputs
+    - _print_outputs
+    - _cleanup_output_dir
     steps:
+    - script:
+        title: Check output Env. variables - MacOS
+        inputs:
+        - content: |-
+            #!/bin/bash
+            set -ex
+            rm -rf $BITRISE_MACOS_APP_PATH
     - path::./:
-        title: Step test - macos
+        title: Step test - MacOS
         inputs:
         - project_type_whitelist: macos
         - xamarin_platform: Any CPU
@@ -98,12 +106,11 @@ workflows:
         inputs:
         - content: |-
             #!/bin/bash
-            set -e
-            set -v
+            set -ex
             if [[ ! -e $BITRISE_MACOS_APP_PATH ]]; then exit 1; fi
             if [[ ! -e $BITRISE_MACOS_PKG_PATH ]]; then exit 1; fi
 
-  print_outputs:
+  _print_outputs:
     steps:
     - script:
         title: Output test
@@ -142,27 +149,17 @@ workflows:
             envman add --key BITRISE_MACOS_APP_PATH --value ""
             envman add --key BITRISE_MACOS_PKG_PATH --value ""
 
-  # ----------------------------------------------------------------
-  # --- Utility workflows
-  godeps-update:
-    title: Godeps update
+  _cleanup_output_dir:
     steps:
     - script:
-        title: Dependency update
+        title: Cleanup output dirs
         inputs:
-        - content: |
-            #!/bin/bash
+        - content: |-
             set -ex
-            go get -u -v github.com/tools/godep
+            rm -rf ./Droid/bin ./Droid/obj
+            rm -rf ./iOS/bin ./iOS/obj
+            rm -rf ./Mac/bin ./Mac/obj
 
-            rm -rf ./Godeps
-            rm -rf ./vendor
-
-            go get -t -d ./...
-            godep save ./...
-
-  # ----------------------------------------------------------------
-  # --- workflow to Share this step into a Step Library
   audit-this-step:
     title: Audit the Step
     steps:
@@ -172,3 +169,18 @@ workflows:
             #!/bin/bash
             set -ex
             stepman audit --step-yml ./step.yml
+
+  dep-update:
+    title: Dep update
+    description: |
+      Used for updating bitrise dependencies with dep
+    steps:
+    - script:
+        title: Dependency update
+        inputs:
+        - content: |-
+            #!/bin/env bash
+            set -ex
+            go get -u -v github.com/golang/dep/cmd/dep
+            dep ensure -v
+            dep ensure -v -update

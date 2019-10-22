@@ -7,15 +7,15 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bitrise-io/go-steputils/input"
+	steputiltools "github.com/bitrise-io/go-steputils/tools"
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/log"
-	"github.com/bitrise-tools/go-steputils/input"
-	steputiltools "github.com/bitrise-tools/go-steputils/tools"
-	"github.com/bitrise-tools/go-xamarin/builder"
-	"github.com/bitrise-tools/go-xamarin/constants"
-	"github.com/bitrise-tools/go-xamarin/tools"
-	"github.com/bitrise-tools/go-xamarin/tools/buildtools"
-	shellquote "github.com/kballard/go-shellquote"
+	"github.com/bitrise-io/go-xamarin/builder"
+	"github.com/bitrise-io/go-xamarin/constants"
+	"github.com/bitrise-io/go-xamarin/tools"
+	"github.com/bitrise-io/go-xamarin/tools/buildtools"
+	"github.com/kballard/go-shellquote"
 )
 
 // ConfigsModel ...
@@ -92,7 +92,7 @@ func (configs ConfigsModel) validate() error {
 	return nil
 }
 
-func exportZipedArtifactDir(pth, deployDir, envKey string) (string, error) {
+func exportZippedArtifactDir(pth, deployDir, envKey string) (string, error) {
 	parentDir := filepath.Dir(pth)
 	dirName := filepath.Base(pth)
 	deployPth := filepath.Join(deployDir, dirName+".zip")
@@ -100,11 +100,11 @@ func exportZipedArtifactDir(pth, deployDir, envKey string) (string, error) {
 	cmd.SetDir(parentDir)
 	out, err := cmd.RunAndReturnTrimmedCombinedOutput()
 	if err != nil {
-		return "", fmt.Errorf("Failed to zip dir: %s, output: %s, error: %s", pth, out, err)
+		return "", fmt.Errorf("failed to zip dir: %s, output: %s, error: %s", pth, out, err)
 	}
 
 	if err := steputiltools.ExportEnvironmentWithEnvman(envKey, deployPth); err != nil {
-		return "", fmt.Errorf("Failed to export artifact path (%s) into (%s)", deployPth, envKey)
+		return "", fmt.Errorf("failed to export artifact path (%s) into (%s)", deployPth, envKey)
 	}
 
 	return deployPth, nil
@@ -115,11 +115,11 @@ func exportArtifactDir(pth, deployDir, envKey string) (string, error) {
 	deployPth := filepath.Join(deployDir, base)
 
 	if err := command.CopyDir(pth, deployDir, false); err != nil {
-		return "", fmt.Errorf("Failed to move artifact (%s) to (%s)", pth, deployDir)
+		return "", fmt.Errorf("failed to move artifact (%s) to (%s)", pth, deployDir)
 	}
 
 	if err := steputiltools.ExportEnvironmentWithEnvman(envKey, deployPth); err != nil {
-		return "", fmt.Errorf("Failed to export artifact path (%s) into (%s)", deployPth, envKey)
+		return "", fmt.Errorf("failed to export artifact path (%s) into (%s)", deployPth, envKey)
 	}
 
 	return deployPth, nil
@@ -130,11 +130,11 @@ func exportArtifactFile(pth, deployDir, envKey string) (string, error) {
 	deployPth := filepath.Join(deployDir, base)
 
 	if err := command.CopyFile(pth, deployPth); err != nil {
-		return "", fmt.Errorf("Failed to move artifact (%s) to (%s)", pth, deployPth)
+		return "", fmt.Errorf("failed to move artifact (%s) to (%s)", pth, deployPth)
 	}
 
 	if err := steputiltools.ExportEnvironmentWithEnvman(envKey, deployPth); err != nil {
-		return "", fmt.Errorf("Failed to export artifact path (%s) into (%s)", deployPth, envKey)
+		return "", fmt.Errorf("failed to export artifact path (%s) into (%s)", deployPth, envKey)
 	}
 
 	return deployPth, nil
@@ -157,7 +157,7 @@ func main() {
 	}
 
 	// parse project type filters
-	projectTypeWhitelist := []constants.SDK{}
+	var projectTypeWhitelist []constants.SDK
 	if len(configs.ProjectTypeWhitelist) > 0 {
 		split := strings.Split(configs.ProjectTypeWhitelist, ",")
 
@@ -208,19 +208,19 @@ func main() {
 		buildTool = buildtools.Xbuild
 	}
 
-	builder, err := builder.New(configs.XamarinSolution, projectTypeWhitelist, buildTool)
+	b, err := builder.New(configs.XamarinSolution, projectTypeWhitelist, buildTool)
 	if err != nil {
 		failf("Failed to create xamarin builder, error: %s", err)
 	}
 
-	prepareCallback := func(solutionName string, projectName string, sdk constants.SDK, testFramwork constants.TestFramework, command *tools.Editable) {
+	prepareCallback := func(solutionName string, projectName string, sdk constants.SDK, testFramework constants.TestFramework, command *tools.Editable) {
 		options, ok := projectTypeCustomOptions[sdk]
 		if ok {
 			(*command).SetCustomOptions(options...)
 		}
 	}
 
-	callback := func(solutionName string, projectName string, sdk constants.SDK, testFramwork constants.TestFramework, commandStr string, alreadyPerformed bool) {
+	callback := func(solutionName string, projectName string, sdk constants.SDK, testFramework constants.TestFramework, commandStr string, alreadyPerformed bool) {
 		fmt.Println()
 		log.Infof("Building project: %s", projectName)
 		log.Donef("$ %s", commandStr)
@@ -232,7 +232,7 @@ func main() {
 
 	startTime := time.Now()
 
-	warnings, err := builder.BuildAllProjects(configs.XamarinConfiguration, configs.XamarinPlatform, prepareCallback, callback)
+	warnings, err := b.BuildAllProjects(configs.XamarinConfiguration, configs.XamarinPlatform, true, prepareCallback, callback)
 	if len(warnings) > 0 {
 		log.Warnf("Build warnings:")
 		for _, warning := range warnings {
@@ -245,7 +245,7 @@ func main() {
 
 	endTime := time.Now()
 
-	output, err := builder.CollectProjectOutputs(configs.XamarinConfiguration, configs.XamarinPlatform, startTime, endTime)
+	output, err := b.CollectProjectOutputs(configs.XamarinConfiguration, configs.XamarinPlatform, startTime, endTime)
 	if err != nil {
 		failf("Failed to collect output, error: %s", err)
 	}
@@ -260,10 +260,12 @@ func main() {
 	log.Infof("Exporting generated outputs...")
 
 	for projectName, projectOutput := range output {
+		outputNumber := len(projectOutput.Outputs)
 		fmt.Println()
-		log.Donef("%s outputs:", projectName)
+		log.Donef("%s outputs (%d):", projectName, outputNumber)
 
-		for _, output := range projectOutput.Outputs {
+		for i, output := range projectOutput.Outputs {
+			log.Infof("%d/%d - %s - Type: %s", i+1, outputNumber, output.Pth, projectOutput.ProjectType)
 			// Android outputs
 			if projectOutput.ProjectType == constants.SDKAndroid && output.OutputType == constants.OutputTypeAPK {
 				envKey := "BITRISE_APK_PATH"
@@ -299,7 +301,7 @@ func main() {
 
 				if output.OutputType == constants.OutputTypeDSYM {
 					envKey := "BITRISE_DSYM_PATH"
-					pth, err := exportZipedArtifactDir(output.Pth, configs.DeployDir, envKey)
+					pth, err := exportZippedArtifactDir(output.Pth, configs.DeployDir, envKey)
 					if err != nil {
 						failf("Failed to export dsym, error: %s", err)
 					}
@@ -342,7 +344,7 @@ func main() {
 
 				if output.OutputType == constants.OutputTypeDSYM {
 					envKey := "BITRISE_TVOS_DSYM_PATH"
-					pth, err := exportZipedArtifactDir(output.Pth, configs.DeployDir, envKey)
+					pth, err := exportZippedArtifactDir(output.Pth, configs.DeployDir, envKey)
 					if err != nil {
 						failf("Failed to export dsym, error: %s", err)
 					}
