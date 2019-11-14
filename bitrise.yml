@@ -118,6 +118,7 @@ workflows:
         inputs:
         - content: |-
             echo "BITRISE_APK_PATH: $BITRISE_APK_PATH"
+            echo "BITRISE_AAB_PATH: $BITRISE_AAB_PATH"
             echo
             echo "BITRISE_XCARCHIVE_PATH: $BITRISE_XCARCHIVE_PATH"
             echo "BITRISE_IPA_PATH: $BITRISE_IPA_PATH"
@@ -134,6 +135,7 @@ workflows:
             echo "BITRISE_MACOS_PKG_PATH: $BITRISE_MACOS_PKG_PATH"
 
             envman add --key BITRISE_APK_PATH --value ""
+            envman add --key BITRISE_AAB_PATH --value ""
 
             envman add --key BITRISE_XCARCHIVE_PATH --value ""
             envman add --key BITRISE_IPA_PATH --value ""
