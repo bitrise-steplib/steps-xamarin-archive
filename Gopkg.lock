@@ -28,8 +28,8 @@
   revision = "ad86bf775472ce1934affb9d3cb7d5ea3dffd16f"
 
 [[projects]]
-  branch = "master"
-  digest = "1:c5ae759861ba37d16c453386e6b5696b2b74ba969e9fdd4962f4f2625ae15c95"
+  branch = "TOOL-71"
+  digest = "1:934c3124d1a8295a77c8e521608302c128cb7a8de1594627da03f916f489f20d"
   name = "github.com/bitrise-io/go-xamarin"
   packages = [
     "analyzers/project",
@@ -44,7 +44,7 @@
     "utility",
   ]
   pruneopts = "UT"
-  revision = "b4423590eb839704cbbe1e76e28e86bef4b6227a"
+  revision = "4f9484b6545ad77461dfa78d7f1230fdf53c5838"
 
 [[projects]]
   branch = "master"

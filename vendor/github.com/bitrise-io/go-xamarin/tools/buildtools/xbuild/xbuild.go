@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/pathutil"
@@ -95,7 +96,8 @@ func (xbuild Model) buildCommands() []string {
 		cmdSlice = append(cmdSlice, fmt.Sprintf("/target:%s", xbuild.target))
 	}
 
-	cmdSlice = append(cmdSlice, fmt.Sprintf("/p:SolutionDir=%s", filepath.Dir(xbuild.SolutionPth)))
+	solutionDirParam := strings.TrimSuffix(filepath.Dir(xbuild.SolutionPth), string(filepath.Separator)) + string(filepath.Separator)
+	cmdSlice = append(cmdSlice, fmt.Sprintf("/p:SolutionDir=%s", solutionDirParam))
 
 	if xbuild.configuration != "" {
 		cmdSlice = append(cmdSlice, fmt.Sprintf("/p:Configuration=%s", xbuild.configuration))
