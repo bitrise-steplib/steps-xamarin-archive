@@ -7,7 +7,7 @@
   name = "github.com/bitrise-io/go-utils"
 
 [[constraint]]
-  branch = "TOOL-71"
+  branch = "master"
   name = "github.com/bitrise-io/go-xamarin"
 
 [[constraint]]
