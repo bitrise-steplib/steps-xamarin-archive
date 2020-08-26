@@ -17,7 +17,6 @@ workflows:
     after_run:
     - test_ios
     - test_android_custom_options
-    - test_macos
     steps:
     - go-list:
     - golint:
@@ -84,32 +83,6 @@ workflows:
             set -ex
             if [[ ! -e $BITRISE_APK_PATH ]]; then exit 1; fi
 
-  test_macos:
-    after_run:
-    - _print_outputs
-    - _cleanup_output_dir
-    steps:
-    - script:
-        title: Check output Env. variables - MacOS
-        inputs:
-        - content: |-
-            #!/bin/bash
-            set -ex
-            rm -rf $BITRISE_MACOS_APP_PATH
-    - path::./:
-        title: Step test - MacOS
-        inputs:
-        - project_type_whitelist: macos
-        - xamarin_platform: Any CPU
-    - script:
-        title: Check output Env. variables - MacOS
-        inputs:
-        - content: |-
-            #!/bin/bash
-            set -ex
-            if [[ ! -e $BITRISE_MACOS_APP_PATH ]]; then exit 1; fi
-            if [[ ! -e $BITRISE_MACOS_PKG_PATH ]]; then exit 1; fi
-
   _print_outputs:
     steps:
     - script:
@@ -128,10 +101,6 @@ workflows:
             echo "BITRISE_TVOS_IPA_PATH: $BITRISE_TVOS_IPA_PATH"
             echo "BITRISE_TVOS_DSYM_PATH: $BITRISE_TVOS_DSYM_PATH"
             echo "BITRISE_TVOS_APP_PATH: $BITRISE_TVOS_APP_PATH"
-            echo
-            echo "BITRISE_MACOS_XCARCHIVE_PATH: $BITRISE_MACOS_XCARCHIVE_PATH"
-            echo "BITRISE_MACOS_APP_PATH: $BITRISE_MACOS_APP_PATH"
-            echo "BITRISE_MACOS_PKG_PATH: $BITRISE_MACOS_PKG_PATH"
 
             envman add --key BITRISE_APK_PATH --value ""
 
@@ -144,10 +113,6 @@ workflows:
             envman add --key BITRISE_TVOS_IPA_PATH --value ""
             envman add --key BITRISE_TVOS_DSYM_PATH --value ""
             envman add --key BITRISE_TVOS_APP_PATH --value ""
-
-            envman add --key BITRISE_MACOS_XCARCHIVE_PATH --value ""
-            envman add --key BITRISE_MACOS_APP_PATH --value ""
-            envman add --key BITRISE_MACOS_PKG_PATH --value ""
 
   _cleanup_output_dir:
     steps:
