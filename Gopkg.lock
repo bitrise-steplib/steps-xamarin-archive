@@ -10,11 +10,11 @@
     "tools",
   ]
   pruneopts = "UT"
-  revision = "f540824d77dfd382ce84fd0ee0a9da2fba1cce0a"
+  revision = "3c98d95a94d51624a26e99419d0fc03d2aab0055"
 
 [[projects]]
   branch = "master"
-  digest = "1:92dbcb84f9e191d2511dcce1bc008eb6379e57bc358ccc2a36a97a37c3720ef9"
+  digest = "1:f80f875d6fb07a598b92e734ab804f2995faaa5d6e13cb724255fc1376cb5fbf"
   name = "github.com/bitrise-io/go-utils"
   packages = [
     "colorstring",
@@ -25,11 +25,11 @@
     "pathutil",
   ]
   pruneopts = "UT"
-  revision = "ad86bf775472ce1934affb9d3cb7d5ea3dffd16f"
+  revision = "5067a2a682f21030f379f88e853b9e0734a24516"
 
 [[projects]]
   branch = "master"
-  digest = "1:c5ae759861ba37d16c453386e6b5696b2b74ba969e9fdd4962f4f2625ae15c95"
+  digest = "1:c98c98816cda3905ebedc4273c6356402842be1ca056a672c17721db322211ad"
   name = "github.com/bitrise-io/go-xamarin"
   packages = [
     "analyzers/project",
@@ -44,7 +44,7 @@
     "utility",
   ]
   pruneopts = "UT"
-  revision = "b4423590eb839704cbbe1e76e28e86bef4b6227a"
+  revision = "53560d0a527813cd21bf9f6c6916c93e03d617be"
 
 [[projects]]
   branch = "master"
