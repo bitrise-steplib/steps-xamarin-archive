@@ -1,16 +1,15 @@
-# github.com/bitrise-io/go-steputils v0.0.0-20191108114135-3c98d95a94d5
+# github.com/bitrise-io/go-steputils v0.0.0-20210324082442-21a1b8f2b237
 ## explicit
 github.com/bitrise-io/go-steputils/input
 github.com/bitrise-io/go-steputils/tools
-# github.com/bitrise-io/go-utils v0.0.0-20191108114511-5067a2a682f2
+# github.com/bitrise-io/go-utils v0.0.0-20210323091856-00429d8e1e87
 ## explicit
 github.com/bitrise-io/go-utils/colorstring
 github.com/bitrise-io/go-utils/command
-github.com/bitrise-io/go-utils/errorutil
 github.com/bitrise-io/go-utils/fileutil
 github.com/bitrise-io/go-utils/log
 github.com/bitrise-io/go-utils/pathutil
-# github.com/bitrise-io/go-xamarin v0.0.0-20191210125924-53560d0a5278
+# github.com/bitrise-io/go-xamarin v0.0.0-20210419121736-7541e2f0d448
 ## explicit
 github.com/bitrise-io/go-xamarin/analyzers/project
 github.com/bitrise-io/go-xamarin/analyzers/solution
@@ -25,5 +24,3 @@ github.com/bitrise-io/go-xamarin/utility
 # github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 ## explicit
 github.com/kballard/go-shellquote
-# github.com/stretchr/testify v1.7.0
-## explicit
