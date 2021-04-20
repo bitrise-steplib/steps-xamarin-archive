@@ -1,0 +1,26 @@
+# github.com/bitrise-io/go-steputils v0.0.0-20210324082442-21a1b8f2b237
+## explicit
+github.com/bitrise-io/go-steputils/input
+github.com/bitrise-io/go-steputils/tools
+# github.com/bitrise-io/go-utils v0.0.0-20210323091856-00429d8e1e87
+## explicit
+github.com/bitrise-io/go-utils/colorstring
+github.com/bitrise-io/go-utils/command
+github.com/bitrise-io/go-utils/fileutil
+github.com/bitrise-io/go-utils/log
+github.com/bitrise-io/go-utils/pathutil
+# github.com/bitrise-io/go-xamarin v0.0.0-20210419121736-7541e2f0d448
+## explicit
+github.com/bitrise-io/go-xamarin/analyzers/project
+github.com/bitrise-io/go-xamarin/analyzers/solution
+github.com/bitrise-io/go-xamarin/builder
+github.com/bitrise-io/go-xamarin/constants
+github.com/bitrise-io/go-xamarin/tools
+github.com/bitrise-io/go-xamarin/tools/buildtools
+github.com/bitrise-io/go-xamarin/tools/buildtools/msbuild
+github.com/bitrise-io/go-xamarin/tools/buildtools/xbuild
+github.com/bitrise-io/go-xamarin/tools/nunit
+github.com/bitrise-io/go-xamarin/utility
+# github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
+## explicit
+github.com/kballard/go-shellquote
