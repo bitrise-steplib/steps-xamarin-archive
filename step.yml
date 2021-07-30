@@ -110,10 +110,13 @@ inputs:
       description: |-
         These options will be appended to the end of the macOS build command.
 outputs:
-  # Android output
+  # Android outputs
   - BITRISE_APK_PATH: ""
     opts:
-      title: The created android .apk file's path
+      title: The created Android .apk file's path
+  - BITRISE_AAB_PATH: ""
+    opts:
+      title: The created Android .aab file's path
   # iOS outputs
   - BITRISE_XCARCHIVE_PATH: ""
     opts:
