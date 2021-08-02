@@ -266,15 +266,28 @@ func main() {
 
 		for i, output := range projectOutput.Outputs {
 			log.Infof("%d/%d - %s - Type: %s", i+1, outputNumber, output.Pth, projectOutput.ProjectType)
+
 			// Android outputs
-			if projectOutput.ProjectType == constants.SDKAndroid && output.OutputType == constants.OutputTypeAPK {
-				envKey := "BITRISE_APK_PATH"
-				pth, err := exportArtifactFile(output.Pth, configs.DeployDir, envKey)
-				if err != nil {
-					failf("Failed to export apk, error: %s", err)
+			if projectOutput.ProjectType == constants.SDKAndroid {
+				if output.OutputType == constants.OutputTypeAPK {
+					envKey := "BITRISE_APK_PATH"
+					pth, err := exportArtifactFile(output.Pth, configs.DeployDir, envKey)
+					if err != nil {
+						failf("Failed to export apk, error: %s", err)
+					}
+					fmt.Println()
+					log.Printf("The apk path is now available in the Environment Variable: %s\nvalue: %s", envKey, pth)
 				}
-				fmt.Println()
-				log.Printf("The apk path is now available in the Environment Variable: %s\nvalue: %s", envKey, pth)
+
+				if output.OutputType == constants.OutputTypeAAB {
+					envKey := "BITRISE_AAB_PATH"
+					pth, err := exportArtifactFile(output.Pth, configs.DeployDir, envKey)
+					if err != nil {
+						failf("Failed to export aab, error: %s", err)
+					}
+					fmt.Println()
+					log.Printf("The aab path is now available in the Environment Variable: %s\nvalue: %s", envKey, pth)
+				}
 			}
 
 			// IOS outputs

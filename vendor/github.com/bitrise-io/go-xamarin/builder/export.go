@@ -139,6 +139,15 @@ func exportApk(outputDir, assemblyName string, startTime, endTime time.Time) (st
 	)
 }
 
+func exportAab(outputDir, assemblyName string, startTime, endTime time.Time) (string, error) {
+	return findArtifact(outputDir, startTime, endTime, false,
+		fmt.Sprintf(`(?i).*%s.*signed.*\.aab$`, assemblyName),
+		fmt.Sprintf(`(?i).*%s.*\.aab$`, assemblyName),
+		`(?i).*signed.*\.aab$`,
+		`(?i).*\.aab$`,
+	)
+}
+
 func exportIpa(outputDir, assemblyName string, startTime, endTime time.Time) (string, error) {
 	return findArtifact(outputDir, startTime, endTime, true,
 		fmt.Sprintf(`(?i).*%s.*\.ipa$`, assemblyName),

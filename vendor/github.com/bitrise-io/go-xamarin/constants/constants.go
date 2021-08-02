@@ -116,6 +116,8 @@ const (
 	OutputTypeUnknown OutputType = "unknown"
 	// OutputTypeAPK ...
 	OutputTypeAPK OutputType = "apk"
+	// OutputTypeAAB ...
+	OutputTypeAAB OutputType = "aab"
 	// OutputTypeXCArchive ...
 	OutputTypeXCArchive OutputType = "xcarchive"
 	// OutputTypeIPA ...
@@ -135,6 +137,8 @@ func ParseOutputType(outputType string) (OutputType, error) {
 	switch outputType {
 	case "apk":
 		return OutputTypeAPK, nil
+	case "aab":
+		return OutputTypeAAB, nil
 	case "xcarchive":
 		return OutputTypeXCArchive, nil
 	case "ipa":

@@ -29,7 +29,7 @@ func validateSolutionPth(pth string) error {
 func validateSolutionConfig(solution solution.Model, configuration, platform string) error {
 	config := utility.ToConfig(configuration, platform)
 	if _, ok := solution.ConfigMap[config]; !ok {
-		return fmt.Errorf("invalid solution config, available: %v", solution.ConfigList())
+		return fmt.Errorf("invalid solution config: %s, available: %v", config, solution.ConfigList())
 	}
 	return nil
 }

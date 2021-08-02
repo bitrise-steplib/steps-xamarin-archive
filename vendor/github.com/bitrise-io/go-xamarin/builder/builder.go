@@ -505,6 +505,17 @@ func (builder Model) CollectProjectOutputs(configuration, platform string, start
 			} else {
 				log.Debugf("No valid apk path found.")
 			}
+
+			if aabPth, err := exportAab(projectConfig.OutputDir, packageName, startTime, endTime); err != nil {
+				return ProjectOutputMap{}, fmt.Errorf("could not export aab. Error: %v", err)
+			} else if aabPth != "" {
+				projectOutputs.Outputs = append(projectOutputs.Outputs, OutputModel{
+					Pth:        aabPth,
+					OutputType: constants.OutputTypeAAB,
+				})
+			} else {
+				log.Debugf("No valid aab path found.")
+			}
 		}
 
 		if len(projectOutputs.Outputs) > 0 {
