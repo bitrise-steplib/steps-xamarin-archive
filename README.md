@@ -1,3 +1,7 @@
+**DEPRECATED**: The Xamarin development platform is not officially supported.
+
+More info: https://blog.bitrise.io/post/xamarin-support-ends-in-2022-on-bitrise
+
 # Xamarin Archive
 
 Create an archive for your Xamarin application.
